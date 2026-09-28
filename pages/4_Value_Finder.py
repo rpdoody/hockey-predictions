@@ -54,6 +54,11 @@ try:
     schedule = client.get_schedule(date_str)
     games_list = []
     for week in schedule.get("gameWeek", []):
+        # Only include the block matching the selected date; the NHL
+        # schedule endpoint returns a full week's worth of gameWeek
+        # entries, not just the requested day.
+        if week.get("date") != date_str:
+            continue
         for game in week.get("games", []):
             if game.get("gameType") in [2, 3]:
                 games_list.append(game)
