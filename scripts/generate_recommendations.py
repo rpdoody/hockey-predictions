@@ -32,9 +32,13 @@ MIN_EDGE = 0.03           # only include picks with ≥3 % edge
 LOOKAHEAD_DAYS = 7
 
 
-def _american_to_prob(odds: int | None) -> float | None:
+def _american_to_prob(odds: int | float | str | None) -> float | None:
     """American moneyline → implied probability (no vig removal)."""
     if odds is None:
+        return None
+    try:
+        odds = float(odds)
+    except (TypeError, ValueError):
         return None
     if odds > 0:
         return 100.0 / (odds + 100.0)
@@ -56,7 +60,7 @@ def main() -> None:
     today = date.today()
     client = NHLClient(cache_ttl_minutes=60)
 
-    # ── 1. Fetch upcoming games with odds ────────────────────────────────────
+    # ── 1. Fetch upcoming games with odds ──────────────────────────────────────
     print("[generate_recommendations] Fetching upcoming games with odds...")
     try:
         odds_games = client.get_espn_odds(days_ahead=LOOKAHEAD_DAYS)
@@ -70,7 +74,7 @@ def main() -> None:
         OUT_PATH.write_text(json.dumps([], indent=2))
         return
 
-    # ── 2. Load team analytics (best effort) ────────────────────────────────
+    # ── 2. Load team analytics (best effort) ─────────────────────────────
     print("[generate_recommendations] Loading team analytics...")
     try:
         analytics_data = client.get_team_analytics(season="20252026")
@@ -78,7 +82,7 @@ def main() -> None:
         print(f"[generate_recommendations] Analytics fetch failed: {e} — using legacy model")
         analytics_data = {}
 
-    # ── 3. Build recommendations ─────────────────────────────────────────────
+    # ── 3. Build recommendations ────────────────────────────────────────
     recommendations = []
 
     for game in odds_games:
@@ -104,7 +108,7 @@ def main() -> None:
         home_implied = _american_to_prob(home_ml)
         away_implied = _american_to_prob(away_ml)
 
-        # ── 4. Team stats for xG model ────────────────────────────────────
+        # ── 4. Team stats for xG model ────────────────────────────
         try:
             home_stats = client.get_team_summary(home_abbr) or {}
             away_stats = client.get_team_summary(away_abbr) or {}
@@ -161,7 +165,7 @@ def main() -> None:
         matchup = f"{away_abbr} @ {home_abbr}"
         game_date = game_date_str or today.isoformat()
 
-        # ── 5. Edge calculation ───────────────────────────────────────────
+        # ── 5. Edge calculation ──────────────────────────────────────
         if home_implied is not None:
             home_edge = home_win_prob - home_implied
             if home_edge >= MIN_EDGE:
@@ -196,7 +200,7 @@ def main() -> None:
                     "notes":          model_source,
                 })
 
-    # ── 6. Write output ───────────────────────────────────────────────────────
+    # ── 6. Write output ────────────────────────────────────────────
     OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     OUT_PATH.write_text(json.dumps(recommendations, indent=2, ensure_ascii=False))
     print(f"[generate_recommendations] Wrote {len(recommendations)} recommendations → {OUT_PATH}")
