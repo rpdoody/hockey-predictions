@@ -1,4 +1,4 @@
-﻿"""Today's games with predictions and betting value."""
+"""Today's games with predictions and betting value."""
 import streamlit as st
 import pandas as pd
 from datetime import date, datetime, timezone
@@ -29,6 +29,11 @@ try:
     
     games_list = []
     for game_week in schedule.get("gameWeek", []):
+        # Only include the block matching the selected date; the NHL
+        # schedule endpoint returns a full week's worth of gameWeek
+        # entries, not just the requested day.
+        if game_week.get("date") != date_str:
+            continue
         for game in game_week.get("games", []):
             # Filter for NHL games only (gameType 2=regular season, 3=playoffs)
             if game.get("gameType") in [2, 3]:
