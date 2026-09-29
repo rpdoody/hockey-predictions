@@ -166,12 +166,25 @@ def main() -> None:
         except Exception:
             home_stats = away_stats = {}
 
-        if not _has_enough_games(home_stats, home_abbr) or not _has_enough_games(away_stats, away_abbr):
-            print(
-                f"[generate_recommendations] Not enough {season_id} data for "
-                f"{away_abbr} @ {home_abbr} — skipping"
-            )
-            continue
+        current_gp = (home_stats.get("games_played"), away_stats.get("games_played"))
+        prior_only = not (
+            _has_enough_games(home_stats, home_abbr) and _has_enough_games(away_stats, away_abbr)
+        )
+        if prior_only:
+            # Too few games this season: evaluate and log on last season's ratings,
+            # but never turn the result into a recommendation.
+            prior_id = f"{int(season_id[:4]) - 1}{season_id[:4]}"
+            try:
+                home_stats = client.get_team_summary(home_abbr, season=prior_id) or {}
+                away_stats = client.get_team_summary(away_abbr, season=prior_id) or {}
+            except Exception:
+                home_stats = away_stats = {}
+            if not home_stats or not away_stats:
+                print(
+                    f"[generate_recommendations] No {season_id} or {prior_id} data for "
+                    f"{away_abbr} @ {home_abbr} — skipping"
+                )
+                continue
 
         try:
             home_tm = TeamMetrics.from_api_response(home_stats)
@@ -180,8 +193,8 @@ def main() -> None:
             print(f"[generate_recommendations] TeamMetrics error for {away_abbr} @ {home_abbr}: {e}")
             continue
 
-        home_analytics = analytics_data.get(home_abbr)
-        away_analytics = analytics_data.get(away_abbr)
+        home_analytics = None if prior_only else analytics_data.get(home_abbr)
+        away_analytics = None if prior_only else analytics_data.get(away_abbr)
 
         if home_analytics and away_analytics:
             try:
@@ -214,6 +227,8 @@ def main() -> None:
         away_win_prob = 1.0 - home_win_prob if fair_home is not None else raw_away_prob
 
         matchup = f"{away_abbr} @ {home_abbr}"
+        if prior_only:
+            model_source = f"Prior season ({prior_id})"
 
         log_records.append({
             "espn_game_id":       game.get("game_id"),
@@ -224,8 +239,9 @@ def main() -> None:
             "away_team":          away_abbr,
             "season_id":          season_id,
             "model_source":       model_source,
-            "home_games_played":  home_stats.get("games_played"),
-            "away_games_played":  away_stats.get("games_played"),
+            "prior_only":         prior_only,
+            "home_games_played":  current_gp[0],
+            "away_games_played":  current_gp[1],
             "home_xg":            home_xg,
             "away_xg":            away_xg,
             "home_win_prob_raw":  round(raw_home_prob, 4),
@@ -237,7 +253,7 @@ def main() -> None:
         })
 
         # ── 5. Edge calculation ──────────────────────────────────────
-        if home_implied is not None:
+        if home_implied is not None and not prior_only:
             home_edge = home_win_prob - home_implied
             if home_edge >= MIN_EDGE:
                 recommendations.append({
@@ -255,7 +271,7 @@ def main() -> None:
                     "notes":          model_source,
                 })
 
-        if away_implied is not None:
+        if away_implied is not None and not prior_only:
             away_edge = away_win_prob - away_implied
             if away_edge >= MIN_EDGE:
                 recommendations.append({
