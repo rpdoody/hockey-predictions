@@ -1,4 +1,4 @@
-﻿"""Backtesting simulator for model validation."""
+"""Backtesting simulator for model validation."""
 import streamlit as st
 import pandas as pd
 import sys
@@ -11,10 +11,15 @@ src_path = Path(__file__).parent.parent
 sys.path.insert(0, str(src_path))
 
 from src.models.backtest import BacktestEngine, BacktestConfig, BetResult
+from src.models.features import NHLFeatureEngineer
+from src.utils.odds import decimal_to_american
 from footer import add_betting_oracle_footer
 
+# Half of a standard two-way vig: -110 on both sides implies 52.38% each.
+VIG_PER_SIDE = 0.0238
+
 st.title("🔬 Backtesting Simulator")
-st.markdown("Validate model predictions against historical performance.")
+st.markdown("Validate staking rules against historical game results.")
 
 # Configuration Section
 st.subheader("Backtest Configuration")
@@ -34,49 +39,48 @@ with col2:
 with col3:
     bet_types = st.multiselect(
         "Bet Types",
-        ["moneyline", "puck_line", "totals"],
+        ["moneyline"],
         default=["moneyline"]
     )
+    st.caption("Puck line and totals need stored market lines and are not simulated yet.")
+    seed = st.number_input("Random Seed", 0, 1000000, 42, 1)
 
 # Simulation Section
 st.markdown("---")
 st.subheader("Run Simulation")
 
-st.info("""
-💡 **Tip**: This simulates a model with real predictive skill that can find value against market odds.
-- Model has ~55% accuracy (better than random)
-- Finds bets where market odds are wrong
-- Tests Kelly criterion staking on historical data
+st.warning("""
+⚠️ **Simulation only - this is not a test of your trained model.**
+- Model and market probabilities are random draws (seeded, so reruns match).
+- Only the game results are real (deduplicated 2025-26 games).
+- Market odds include a two-way vig of about -110 on each side.
+- Results show how the staking rules behave, not whether the model has an edge.
 """)
 
 if st.button("🚀 Run Backtest", type="primary"):
-    # Load historical game data
-    import json
-    from pathlib import Path
-    
     games_file = Path("data_files/historical/2025-26/games.json")
     if not games_file.exists():
         st.error("Historical game data not found. Please ensure data_files/historical/2025-26/games.json exists.")
         st.stop()
-    
-    with open(games_file, 'r') as f:
-        all_games = json.load(f)
-    
+
+    # The collector stores each game once per weekly schedule window it appeared
+    # in, so load through the shared loader, which keeps one row per game_id.
+    games_df = NHLFeatureEngineer().load_historical_games(["2025-26"])
+
     # Filter to completed games in our date range
-    from datetime import datetime
-    start_date_filter = datetime.combine(start_date, datetime.min.time())
-    end_date_filter = datetime.combine(end_date, datetime.max.time())
-    
-    completed_games = [
-        game for game in all_games
-        if game.get("game_state") == "OFF" and 
-        start_date_filter <= datetime.fromisoformat(game["date"]) <= end_date_filter
-    ]
-    
+    in_range = (
+        (games_df["game_state"] == "OFF")
+        & (games_df["date"] >= pd.Timestamp(start_date))
+        & (games_df["date"] <= pd.Timestamp(end_date))
+    )
+    completed_games = games_df[in_range].to_dict("records")
+
     if not completed_games:
         st.warning(f"No completed games found between {start_date} and {end_date}")
         st.stop()
-    
+
+    st.caption(f"{len(completed_games)} unique completed games in range.")
+
     # Create backtest config
     config = BacktestConfig(
         start_date=start_date.isoformat(),
@@ -87,46 +91,36 @@ if st.button("🚀 Run Backtest", type="primary"):
         max_kelly_fraction=max_kelly,
         bet_types=bet_types
     )
-    
+
     # Initialize engine
     engine = BacktestEngine(config)
-    
-    # Run backtest on real historical data
+    rng = random.Random(int(seed))
+
+    # Run backtest on real historical results
     with st.spinner(f"Running backtest on {len(completed_games)} historical games..."):
         for game in completed_games:
-            game_date = game["date"]
+            game_date = game["date"].strftime("%Y-%m-%d")
             game_id = str(game["game_id"])
-            
-            # Generate realistic model prediction with actual edge
-            # Simulate a model that has some skill beyond market efficiency
-            home_team = game["home_team"]
-            away_team = game["away_team"]
-            
+
             # Base market probability (what odds imply)
             market_home_prob = 0.52  # Slight home advantage in NHL
-            
-            # Model prediction - add some skill (model is better than market)
-            # Model has ~55% accuracy, creating real edge
-            model_skill = random.gauss(0.03, 0.08)  # Model has slight edge
+
+            # Simulated model probability: a random draw with a small assumed edge
+            model_skill = rng.gauss(0.03, 0.08)
             model_prob = max(0.35, min(0.75, market_home_prob + model_skill))
-            
-            # Generate market odds (what bookmakers offer)
-            # Market odds are efficient but not perfect
-            market_noise = random.gauss(0, 0.03)  # Small market inefficiencies
+
+            # Simulated market: fair probability plus noise, then add the vig
+            market_noise = rng.gauss(0, 0.03)
             market_prob_for_odds = max(0.35, min(0.75, market_home_prob + market_noise))
-            
-            # Convert market probability to American odds
-            if market_prob_for_odds > 0.5:
-                odds = int(-100 / (1 - market_prob_for_odds) - 100)
-            else:
-                odds = int(100 * (1 / market_prob_for_odds - 1))
-            
-            # Ensure realistic odds range
+            offered_prob = min(0.95, market_prob_for_odds + VIG_PER_SIDE)
+
+            # Convert to American odds and keep them in a realistic range
+            odds = decimal_to_american(1 / offered_prob)
             odds = max(-800, min(600, odds))
-            
+
             # Get actual result
-            actual_home_win = game["home_won"]
-            
+            actual_home_win = bool(game["home_won"])
+
             # Evaluate bet (only on moneyline for now)
             if "moneyline" in bet_types:
                 engine.evaluate_bet(
@@ -137,56 +131,56 @@ if st.button("🚀 Run Backtest", type="primary"):
                     odds=odds,
                     actual_result=actual_home_win
                 )
-    
+
     results = engine.get_results()
-    
+
     # Display Results
     st.success("✅ Backtest Complete!")
-    
+
     # Summary Metrics
     st.subheader("Performance Summary")
-    
+
     metric_col1, metric_col2, metric_col3, metric_col4 = st.columns(4)
-    
+
     with metric_col1:
         st.metric("Total Bets", results.total_bets)
         st.metric("Win Rate", f"{results.win_rate:.1%}")
-    
+
     with metric_col2:
         st.metric("Total Profit", f"${results.total_profit:+,.2f}")
         st.metric("ROI", f"{results.roi:+.1f}%")
-    
+
     with metric_col3:
         st.metric("Units Profit", f"{results.units_profit:+.1f}u")
         st.metric("Max Drawdown", f"${results.max_drawdown():,.2f}")
-    
+
     with metric_col4:
         breakeven_rate = 52.4  # At -110 odds
         status = "🟢" if results.win_rate * 100 >= breakeven_rate else "🔴"
         st.metric("vs Breakeven", f"{status} {results.win_rate * 100 - breakeven_rate:+.1f}%")
         st.metric("Longest Losing", f"{results.longest_losing_streak()} bets")
-    
+
     # Performance Analysis
     st.markdown("---")
     st.subheader("Detailed Analysis")
-    
+
     # Profitability assessment
     if results.roi > 5:
-        st.success("🎯 **Excellent Performance** - Model shows strong edge")
+        st.success("🎯 **Strong simulated ROI** - The staking rules profit under these assumptions")
     elif results.roi > 0:
-        st.info("📊 **Profitable** - Positive but modest returns")
+        st.info("📊 **Positive simulated ROI** - Modest returns under these assumptions")
     elif results.roi > -5:
-        st.warning("⚠️ **Break-even** - Consider adjusting parameters")
+        st.warning("⚠️ **Near break-even** - Consider adjusting parameters")
     else:
-        st.error("❌ **Unprofitable** - Model or strategy needs improvement")
-    
+        st.error("❌ **Negative simulated ROI** - The strategy loses under these assumptions")
+
     # Recent Bets Table
     st.subheader("Recent Bets")
-    
+
     if results.bets:
         recent_bets = results.bets[-20:]  # Last 20 bets
         bet_data = []
-        
+
         for bet in recent_bets:
             result_icon = "✅" if bet.won else "❌"
             bet_data.append({
@@ -199,28 +193,28 @@ if st.button("🚀 Run Backtest", type="primary"):
                 "Result": result_icon,
                 "Profit": f"${bet.profit:+,.2f}"
             })
-        
+
         df = pd.DataFrame(bet_data)
         st.dataframe(df, hide_index=True, width='stretch')
-    
+
     # Cumulative Profit Chart
     st.subheader("Profit Curve")
-    
+
     cumulative = []
     running_total = 0.0
-    
+
     for bet in results.bets:
         if bet.profit is not None:
             running_total += bet.profit
             cumulative.append(running_total)
-    
+
     if cumulative:
         profit_df = pd.DataFrame({
             "Bet Number": range(1, len(cumulative) + 1),
             "Cumulative Profit ($)": cumulative
         })
         st.line_chart(profit_df, x="Bet Number", y="Cumulative Profit ($)")
-    
+
     # Download results
     st.download_button(
         "📥 Download Bet Log",
