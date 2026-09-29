@@ -1,10 +1,25 @@
 {
   "meta": {
     "sport": "NHL",
-    "generated_at": "2026-09-28T14:36:34.462703+00:00",
+    "generated_at": "2026-09-29T13:27:41.483106+00:00",
     "model_version": "1.0.0",
-    "season": "2026",
-    "notes": "No NHL picks for 2026-09-28"
+    "season": "2026"
   },
-  "bets": []
+  "bets": [
+    {
+      "game_date": "2026-09-29",
+      "game_time": "9:00 PM ET",
+      "game": "FLA @ CAR",
+      "home_team": "CAR",
+      "away_team": "FLA",
+      "bet_type": "Moneyline",
+      "pick": "CAR",
+      "confidence": 0.6911,
+      "edge": 0.1355,
+      "tier": "Elite",
+      "odds": "-125",
+      "line": null,
+      "notes": "Legacy"
+    }
+  ]
 }
