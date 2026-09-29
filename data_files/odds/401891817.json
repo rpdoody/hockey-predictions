@@ -1,0 +1,19 @@
+{
+  "game_id": "401891817",
+  "home_team": "NJD",
+  "away_team": "PHI",
+  "start_time": "2026-10-01T23:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-09-29T18:36:37+00:00",
+      "provider": "Draft Kings",
+      "home_ml": -142,
+      "away_ml": 120,
+      "total": 5.5,
+      "over_odds": -115,
+      "under_odds": -105,
+      "home_pl_odds": 170,
+      "away_pl_odds": -205
+    }
+  ]
+}

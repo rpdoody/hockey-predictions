@@ -1,0 +1,19 @@
+{
+  "game_id": "401891823",
+  "home_team": "SJS",
+  "away_team": "FLA",
+  "start_time": "2026-10-02T02:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-09-29T18:36:37+00:00",
+      "provider": "Draft Kings",
+      "home_ml": 114,
+      "away_ml": -135,
+      "total": 6.5,
+      "over_odds": 102,
+      "under_odds": -122,
+      "home_pl_odds": -218,
+      "away_pl_odds": 180
+    }
+  ]
+}

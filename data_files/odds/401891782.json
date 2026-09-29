@@ -1,0 +1,19 @@
+{
+  "game_id": "401891782",
+  "home_team": "DAL",
+  "away_team": "STL",
+  "start_time": "2026-10-03T01:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-09-29T18:36:37+00:00",
+      "provider": "Draft Kings",
+      "home_ml": -205,
+      "away_ml": 170,
+      "total": 5.5,
+      "over_odds": -108,
+      "under_odds": -112,
+      "home_pl_odds": 120,
+      "away_pl_odds": -142
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "game_id": "401891781",
+  "home_team": "CBJ",
+  "away_team": "BUF",
+  "start_time": "2026-10-01T23:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-09-29T18:36:37+00:00",
+      "provider": "Draft Kings",
+      "home_ml": -115,
+      "away_ml": -105,
+      "total": 6.5,
+      "over_odds": 110,
+      "under_odds": -130,
+      "home_pl_odds": 205,
+      "away_pl_odds": -250
+    }
+  ]
+}

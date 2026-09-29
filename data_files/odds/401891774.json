@@ -1,0 +1,19 @@
+{
+  "game_id": "401891774",
+  "home_team": "BOS",
+  "away_team": "NYR",
+  "start_time": "2026-09-30T00:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-09-29T18:36:37+00:00",
+      "provider": "Draft Kings",
+      "home_ml": -110,
+      "away_ml": -110,
+      "total": 5.5,
+      "over_odds": -135,
+      "under_odds": 114,
+      "home_pl_odds": 215,
+      "away_pl_odds": -265
+    }
+  ]
+}

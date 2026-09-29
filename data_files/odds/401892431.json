@@ -1,0 +1,19 @@
+{
+  "game_id": "401892431",
+  "home_team": "TOR",
+  "away_team": "NYI",
+  "start_time": "2026-09-30T23:30Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-09-29T18:36:37+00:00",
+      "provider": "Draft Kings",
+      "home_ml": -120,
+      "away_ml": 100,
+      "total": 5.5,
+      "over_odds": -130,
+      "under_odds": 110,
+      "home_pl_odds": 195,
+      "away_pl_odds": -238
+    }
+  ]
+}

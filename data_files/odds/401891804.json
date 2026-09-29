@@ -1,0 +1,19 @@
+{
+  "game_id": "401891804",
+  "home_team": "EDM",
+  "away_team": "VAN",
+  "start_time": "2026-09-30T02:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-09-29T18:36:37+00:00",
+      "provider": "Draft Kings",
+      "home_ml": -305,
+      "away_ml": 245,
+      "total": 6.5,
+      "over_odds": -115,
+      "under_odds": -105,
+      "home_pl_odds": -118,
+      "away_pl_odds": -102
+    }
+  ]
+}

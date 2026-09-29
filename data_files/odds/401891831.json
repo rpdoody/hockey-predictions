@@ -1,0 +1,19 @@
+{
+  "game_id": "401891831",
+  "home_team": "WPG",
+  "away_team": "BOS",
+  "start_time": "2026-10-03T00:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-09-29T18:36:37+00:00",
+      "provider": "Draft Kings",
+      "home_ml": -105,
+      "away_ml": -115,
+      "total": 5.5,
+      "over_odds": -125,
+      "under_odds": 105,
+      "home_pl_odds": -245,
+      "away_pl_odds": 200
+    }
+  ]
+}

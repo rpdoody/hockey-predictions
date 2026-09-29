@@ -1,0 +1,19 @@
+{
+  "game_id": "401891828",
+  "home_team": "UTA",
+  "away_team": "CHI",
+  "start_time": "2026-10-02T01:30Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-09-29T18:36:37+00:00",
+      "provider": "Draft Kings",
+      "home_ml": -192,
+      "away_ml": 160,
+      "total": 5.5,
+      "over_odds": -118,
+      "under_odds": -102,
+      "home_pl_odds": 124,
+      "away_pl_odds": -148
+    }
+  ]
+}

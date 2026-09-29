@@ -1,0 +1,19 @@
+{
+  "game_id": "401891780",
+  "home_team": "COL",
+  "away_team": "LAK",
+  "start_time": "2026-10-01T02:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-09-29T18:36:37+00:00",
+      "provider": "Draft Kings",
+      "home_ml": -180,
+      "away_ml": 150,
+      "total": 6.5,
+      "over_odds": 110,
+      "under_odds": -130,
+      "home_pl_odds": 136,
+      "away_pl_odds": -162
+    }
+  ]
+}

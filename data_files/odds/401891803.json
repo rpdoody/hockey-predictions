@@ -1,0 +1,19 @@
+{
+  "game_id": "401891803",
+  "home_team": "DET",
+  "away_team": "NYR",
+  "start_time": "2026-10-02T22:30Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-09-29T18:36:37+00:00",
+      "provider": "Draft Kings",
+      "home_ml": -142,
+      "away_ml": 120,
+      "total": 6.5,
+      "over_odds": 114,
+      "under_odds": -135,
+      "home_pl_odds": 180,
+      "away_pl_odds": -218
+    }
+  ]
+}

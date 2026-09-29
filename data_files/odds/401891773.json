@@ -1,0 +1,19 @@
+{
+  "game_id": "401891773",
+  "home_team": "CAR",
+  "away_team": "FLA",
+  "start_time": "2026-09-29T21:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-09-29T18:36:37+00:00",
+      "provider": "Draft Kings",
+      "home_ml": -130,
+      "away_ml": 110,
+      "total": 6.5,
+      "over_odds": 105,
+      "under_odds": -125,
+      "home_pl_odds": 190,
+      "away_pl_odds": -230
+    }
+  ]
+}

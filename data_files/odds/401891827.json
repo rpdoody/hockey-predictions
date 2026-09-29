@@ -1,0 +1,19 @@
+{
+  "game_id": "401891827",
+  "home_team": "TOR",
+  "away_team": "MTL",
+  "start_time": "2026-09-29T23:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-09-29T18:36:37+00:00",
+      "provider": "Draft Kings",
+      "home_ml": -108,
+      "away_ml": -112,
+      "total": 6.5,
+      "over_odds": -102,
+      "under_odds": -118,
+      "home_pl_odds": -278,
+      "away_pl_odds": 225
+    }
+  ]
+}
