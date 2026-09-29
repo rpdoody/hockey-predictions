@@ -29,8 +29,13 @@ def test_invalid_expected_goals_are_rejected(home_xg, away_xg):
         predict_total(home_xg, away_xg, line=6.0)
 
 
+def test_nan_line_is_rejected():
+    with pytest.raises(ValueError):
+        predict_total(3.0, 3.0, line=math.nan)
+
+
 @pytest.mark.xfail(strict=True, reason="predict_total does not yet validate total lines")
-@pytest.mark.parametrize("line", [-0.5, math.nan, math.inf, 6.25])
+@pytest.mark.parametrize("line", [-0.5, math.inf, 6.25])
 def test_invalid_line_is_rejected(line):
     with pytest.raises(ValueError):
         predict_total(3.0, 3.0, line=line)
