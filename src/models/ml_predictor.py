@@ -230,17 +230,21 @@ class NHLPredictor:
             return None
 
         try:
+            # Team stats and recent form come from the full completed history
+            history = self._load_history()
+
             # Use recent games for validation if none provided
             if test_games is None:
-                games_df = self.feature_engineer.load_historical_games(['2024-25'])
-                # Get last 50 games for validation
-                recent_games = games_df.tail(50)
+                # Get the 50 most recent completed games
+                recent_games = history.tail(50)
                 test_games = [game.to_dict() for _, game in recent_games.iterrows()]
 
             # Convert to DataFrame for validation
             validation_df = pd.DataFrame(test_games)
 
-            return self.trainer.validate_model_calibration(self.model_data, validation_df)
+            return self.trainer.validate_model_calibration(
+                self.model_data, validation_df, history_games=history
+            )
 
         except Exception as e:
             print(f"Error validating predictions: {e}")

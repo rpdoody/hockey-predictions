@@ -49,6 +49,13 @@ class NHLFeatureEngineer:
 
         return df
 
+    @staticmethod
+    def _as_fraction(value, default: float) -> float:
+        """Return a percentage as a 0-1 fraction; accepts 0.178 or 17.8 style values."""
+        if value is None:
+            return default
+        return value / 100.0 if value > 1 else value
+
     def load_team_stats(self, season: str = "20252026") -> Dict[str, Dict]:
         """
         Load team statistics for a season.
@@ -139,12 +146,16 @@ class NHLFeatureEngineer:
                 # Fallback: take first 3 letters
                 abbrev = team_name.replace(' ', '')[:3]
 
+            games_played = team.get('gamesPlayed') or 0
+            wins = team.get('wins')
             team_stats[abbrev] = {
                 'goals_for_pg': team.get('goalsForPerGame', 3.0),
                 'goals_against_pg': team.get('goalsAgainstPerGame', 3.0),
-                'pp_pct': team.get('powerPlayPct', 20.0) / 100.0,
-                'pk_pct': team.get('penaltyKillPct', 80.0) / 100.0,
-                'win_pct': team.get('pointPctg', 0.5),
+                'pp_pct': self._as_fraction(team.get('powerPlayPct'), 0.20),
+                'pk_pct': self._as_fraction(team.get('penaltyKillPct'), 0.80),
+                # Wins per game, matching how compute_team_stats_up_to defines win_pct
+                'win_pct': wins / games_played if wins is not None and games_played else 0.5,
+                'point_pct': team.get('pointPct', 0.5),
                 'games_played': team.get('gamesPlayed', 0)
             }
 

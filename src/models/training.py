@@ -346,13 +346,23 @@ class NHLModelTrainer:
         else:
             plt.show()
 
-    def validate_model_calibration(self, model_data: Dict, validation_games: pd.DataFrame) -> Dict[str, float]:
+    def validate_model_calibration(
+        self,
+        model_data: Dict,
+        validation_games: pd.DataFrame,
+        history_games: Optional[pd.DataFrame] = None,
+    ) -> Dict[str, float]:
         """
         Validate model calibration using validation games.
+
+        Each game's team stats and recent form are computed from games played
+        before it, the same way training builds them.
 
         Args:
             model_data: Loaded model data
             validation_games: DataFrame with validation games
+            history_games: Completed games used to build team stats and recent
+                form (defaults to validation_games)
 
         Returns:
             Dictionary with calibration metrics
@@ -360,19 +370,25 @@ class NHLModelTrainer:
         actual_outcomes = []
         predicted_probabilities = []
 
-        # Look up each team's stats once, rather than re-loading the full
-        # league-wide stats dict for every single game in the validation set.
-        team_stats = self.feature_engineer.load_team_stats()
+        history = validation_games if history_games is None else history_games
+        history = history.copy()
+        if 'date' in history.columns:
+            history['date'] = pd.to_datetime(history['date'])
 
         for _, game in validation_games.iterrows():
             try:
                 game_dict = game.to_dict()
-                home_stats = team_stats.get(game_dict.get('home_team'), _DEFAULT_TEAM_STATS)
-                away_stats = team_stats.get(game_dict.get('away_team'), _DEFAULT_TEAM_STATS)
+                game_date = pd.to_datetime(game_dict.get('date'))
+                home_stats = self.feature_engineer.compute_team_stats_up_to(
+                    game_dict.get('home_team'), game_date, history
+                )
+                away_stats = self.feature_engineer.compute_team_stats_up_to(
+                    game_dict.get('away_team'), game_date, history
+                )
 
                 features = self.feature_engineer.create_game_features(
                     game_dict,
-                    validation_games,
+                    history,
                     home_stats,
                     away_stats,
                 )
