@@ -3,28 +3,13 @@ import streamlit as st
 import pandas as pd
 from pathlib import Path
 import sys
+from datetime import date, datetime
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from src.api.nhl_client import NHLClient
 from footer import add_betting_oracle_footer
-
-st.title("\U0001F4B0 Value Finder")
-
-st.markdown("""
-Find bets where the model's probability exceeds the implied odds.
-A **positive edge** suggests potential value.
-""")
-
-# Initialize client
-@st.cache_resource
-def get_client():
-    return NHLClient()
-
-client = get_client()
-
-# Date selector for value bets
-from datetime import date
 from src.models.expected_goals import (
     TeamMetrics,
     calculate_expected_goals,
@@ -32,6 +17,18 @@ from src.models.expected_goals import (
     calculate_total_xg,
 )
 from src.models.win_probability import calculate_win_probability
+
+st.title("💰 Value Finder")
+st.markdown("""
+Find bets where the model's probability exceeds the implied odds.
+A **positive edge** suggests potential value.
+""")
+
+@st.cache_resource
+def get_client():
+    return NHLClient()
+
+client = get_client()
 
 
 def implied_prob(odds):
@@ -56,37 +53,40 @@ def kelly_fraction(model_prob, american_odds):
         p = float(model_prob)
     except (TypeError, ValueError):
         return None
-
-    # Convert American odds to decimal payout multiplier (b = net odds received per 1 staked)
     if odds > 0:
         b = odds / 100
     elif odds < 0:
         b = 100 / abs(odds)
     else:
         return None
-
-    q = 1 - p
-    kelly = (p * b - q) / b
-    return max(kelly, 0.0)
+    return max((p * b - (1 - p)) / b, 0.0)
 
 
 def normalize_abbrev(name):
-    """Best-effort normalization for matching team names/abbreviations."""
-    if not name:
-        return ""
-    return str(name).strip().upper()
+    """Normalize a team abbreviation without guessing from a game name."""
+    return str(name).strip().upper() if name else ""
+
+
+def matches_schedule_date(event_date, schedule_date, venue_timezone):
+    """Compare an ESPN UTC start time with the NHL schedule's venue-local date."""
+    if not event_date or not venue_timezone:
+        return False
+    try:
+        start = datetime.fromisoformat(str(event_date).replace("Z", "+00:00"))
+        if start.tzinfo is None:
+            return False
+        return start.astimezone(ZoneInfo(venue_timezone)).date().isoformat() == schedule_date
+    except (ValueError, TypeError, ZoneInfoNotFoundError):
+        return False
 
 
 selected_date = st.date_input("Select Date", value=date.today())
 st.subheader(f"Value Bets for {selected_date:%Y-%m-%d}")
-
-# Filters
 col1, col2 = st.columns(2)
 with col1:
     min_edge = st.slider("Minimum Edge %", 0, 20, 3)
 with col2:
     confidence = st.selectbox("Model Confidence", ["All", "High", "Medium", "Low"])
-
 st.caption("Identified Value Bets currently supports moneyline only. Puck lines and totals remain visible in the odds table but are not ranked as value bets.")
 
 
@@ -102,18 +102,14 @@ def confidence_tier(prob):
     return "Low"
 
 
-# Get games for selected date and display model predictions
 st.subheader("Model Predictions")
-preds_df = pd.DataFrame()
 preds_lookup = {}
+schedule_games = {}
 try:
     date_str = selected_date.strftime("%Y-%m-%d")
     schedule = client.get_schedule(date_str)
     games_list = []
     for week in schedule.get("gameWeek", []):
-        # Only include the block matching the selected date; the NHL
-        # schedule endpoint returns a full week's worth of gameWeek
-        # entries, not just the requested day.
         if week.get("date") != date_str:
             continue
         for game in week.get("games", []):
@@ -121,7 +117,6 @@ try:
                 games_list.append(game)
 
     if games_list:
-        # Try to use NHL team analytics when available.
         analytics_data = {}
         try:
             analytics_data = client.get_team_analytics(season="20252026")
@@ -132,7 +127,13 @@ try:
         for game in games_list:
             away_abbr = game.get("awayTeam", {}).get("abbrev")
             home_abbr = game.get("homeTeam", {}).get("abbrev")
-            # fetch stats and compute predictions
+            away_key = normalize_abbrev(away_abbr)
+            home_key = normalize_abbrev(home_abbr)
+            if not away_key or not home_key:
+                continue
+            venue_timezone = game.get("venueTimezone")
+            if venue_timezone:
+                schedule_games[(away_key, home_key)] = venue_timezone
             home_stats = client.get_team_summary(home_abbr)
             away_stats = client.get_team_summary(away_abbr)
             if home_stats and away_stats:
@@ -143,8 +144,7 @@ try:
                 away_analytics = analytics_data.get(away_abbr)
                 if home_analytics and away_analytics:
                     home_xg, away_xg = calculate_expected_goals_with_analytics(
-                        home_tm,
-                        away_tm,
+                        home_tm, away_tm,
                         home_analytics=home_analytics,
                         away_analytics=away_analytics,
                         analytics_weight=0.5,
@@ -156,33 +156,24 @@ try:
 
                 probs = calculate_win_probability(home_xg, away_xg)
                 total_pred = calculate_total_xg(home_xg, away_xg)
-
                 preds.append({
                     "Matchup": f"{away_abbr} @ {home_abbr}",
-                    "AwayAbbr": away_abbr,
-                    "HomeAbbr": home_abbr,
                     "Model": model_source,
                     "Home xG": home_xg,
                     "Away xG": away_xg,
                     "Home Win %": f"{probs.home_win:.1%}",
                     "Away Win %": f"{probs.away_win:.1%}",
-                    "HomeWinProb": probs.home_win,
-                    "AwayWinProb": probs.away_win,
                     "Total Pred": total_pred,
                 })
-
-                preds_lookup[(normalize_abbrev(away_abbr), normalize_abbrev(home_abbr))] = {
+                preds_lookup[(away_key, home_key)] = {
                     "home_win_prob": probs.home_win,
                     "away_win_prob": probs.away_win,
-                    "total_pred": total_pred,
-                    "model_source": model_source,
                 }
         if preds:
             preds_df = pd.DataFrame(preds)
-            display_cols = ["Matchup", "Model", "Home xG", "Away xG", "Home Win %", "Away Win %", "Total Pred"]
             st.caption("Model uses analytics-blended xG when NHL team analytics are available; otherwise it falls back to the legacy goals-based estimate.")
             st.dataframe(
-                preds_df[display_cols],
+                preds_df,
                 width='stretch',
                 hide_index=True,
                 column_config={
@@ -202,65 +193,47 @@ try:
 except Exception as e:
     st.error(f"Error loading model predictions: {e}")
 
-# continue with odds section
 st.subheader("Today's Betting Odds")
-
 odds_list = []
 try:
     odds_data = client.get_espn_odds(days_ahead=7)
-
     if odds_data:
         for game in odds_data:
-            if game.get("odds"):
-                provider = game["odds"][0]
-
-                # Parse odds
-                home_ml = provider.get("moneyline", {}).get("home")
-                away_ml = provider.get("moneyline", {}).get("away")
-
-                home_impl = implied_prob(home_ml)
-                away_impl = implied_prob(away_ml)
-
-                # Get spread info
-                home_spread_line = provider.get("spread", {}).get("home", {}).get("line")
-                home_spread_odds = provider.get("spread", {}).get("home", {}).get("odds")
-                away_spread_odds = provider.get("spread", {}).get("away", {}).get("odds")
-
-                # Get total info
-                over_line = provider.get("total", {}).get("over", {}).get("line")
-                over_odds = provider.get("total", {}).get("over", {}).get("odds")
-                under_odds = provider.get("total", {}).get("under", {}).get("odds")
-
-                odds_list.append({
-                    "Game": game.get("name", ""),
-                    "Home Team": game.get("home_team", ""),
-                    "Away Team": game.get("away_team", ""),
-                    "Home ML": home_ml if home_ml else "N/A",
-                    "Away ML": away_ml if away_ml else "N/A",
-                    "Home Impl%": f"{home_impl:.1%}" if home_impl else "N/A",
-                    "Away Impl%": f"{away_impl:.1%}" if away_impl else "N/A",
-                    "Spread": f"{home_spread_line}" if home_spread_line else "N/A",
-                    "Total": f"{over_line}" if over_line else "N/A",
-                    "Provider": provider.get("provider", "DraftKings"),
-                    "_home_ml_raw": home_ml,
-                    "_away_ml_raw": away_ml,
-                    "_home_impl_raw": home_impl,
-                    "_away_impl_raw": away_impl,
-                    "_home_spread_line": home_spread_line,
-                    "_home_spread_odds": home_spread_odds,
-                    "_away_spread_odds": away_spread_odds,
-                    "_over_line": over_line,
-                    "_over_odds": over_odds,
-                    "_under_odds": under_odds,
-                })
-
+            if not game.get("odds"):
+                continue
+            away_key = normalize_abbrev(game.get("away_team"))
+            home_key = normalize_abbrev(game.get("home_team"))
+            venue_timezone = schedule_games.get((away_key, home_key))
+            if not matches_schedule_date(game.get("date"), date_str, venue_timezone):
+                continue
+            provider = game["odds"][0]
+            home_ml = provider.get("moneyline", {}).get("home")
+            away_ml = provider.get("moneyline", {}).get("away")
+            home_impl = implied_prob(home_ml)
+            away_impl = implied_prob(away_ml)
+            home_spread_line = provider.get("spread", {}).get("home", {}).get("line")
+            over_line = provider.get("total", {}).get("over", {}).get("line")
+            odds_list.append({
+                "Game": game.get("name", ""),
+                "Home Team": game.get("home_team", ""),
+                "Away Team": game.get("away_team", ""),
+                "Home ML": home_ml if home_ml else "N/A",
+                "Away ML": away_ml if away_ml else "N/A",
+                "Home Impl%": f"{home_impl:.1%}" if home_impl is not None else "N/A",
+                "Away Impl%": f"{away_impl:.1%}" if away_impl is not None else "N/A",
+                "Spread": f"{home_spread_line}" if home_spread_line is not None else "N/A",
+                "Total": f"{over_line}" if over_line is not None else "N/A",
+                "Provider": provider.get("provider", "DraftKings"),
+                "_home_ml_raw": home_ml,
+                "_away_ml_raw": away_ml,
+                "_home_impl_raw": home_impl,
+                "_away_impl_raw": away_impl,
+            })
         if odds_list:
             odds_df = pd.DataFrame(odds_list)
-
             st.dataframe(
                 odds_df.drop(columns=[c for c in odds_df.columns if c.startswith("_")]),
-                width='stretch',
-                hide_index=True,
+                width='stretch', hide_index=True,
                 column_config={
                     "Game": st.column_config.TextColumn("Matchup", width="large"),
                     "Home Team": st.column_config.TextColumn("Home", width="small"),
@@ -271,9 +244,8 @@ try:
                     "Away Impl%": st.column_config.TextColumn("Away Prob", width="small", help="Implied probability from odds"),
                     "Spread": st.column_config.TextColumn("Spread", width="small"),
                     "Total": st.column_config.TextColumn("Total", width="small"),
-                }
+                },
             )
-
             st.divider()
             st.subheader("How It Works")
             st.markdown("""
@@ -285,96 +257,57 @@ try:
             - **Edge:** +5% (65% - 60%)
 
             **Kelly Criterion** suggests bet sizing based on edge:
-            - Kelly % = (Model Prob \u00d7 (Odds + 1) - 1) / Odds
+            - Kelly % = (Model Prob × (Decimal Odds - 1) - (1 - Model Prob)) / (Decimal Odds - 1)
             """)
         else:
-            st.info("No odds data available.")
+            st.info("No ESPN odds match NHL games on the selected date with exact home/away team abbreviations and venue-local start date.")
     else:
         st.info("Unable to fetch odds data.")
-
 except Exception as e:
     st.error(f"Error loading odds: {e}")
     odds_list = []
 
-# Real value bets section: join model predictions to market odds
 st.divider()
 st.subheader("Identified Value Bets")
-
 value_rows = []
-
 if odds_list and preds_lookup:
     for row in odds_list:
         home_abbr_key = normalize_abbrev(row.get("Home Team"))
         away_abbr_key = normalize_abbrev(row.get("Away Team"))
         pred = preds_lookup.get((away_abbr_key, home_abbr_key))
-
-        # Fall back to fuzzy matching on the "Game" string if abbreviations don't line up
-        if pred is None:
-            for (a_key, h_key), p in preds_lookup.items():
-                game_name = normalize_abbrev(row.get("Game"))
-                if a_key and h_key and a_key in game_name and h_key in game_name:
-                    pred = p
-                    away_abbr_key, home_abbr_key = a_key, h_key
-                    break
-
         if pred is None:
             continue
-
         matchup_label = f"{away_abbr_key} @ {home_abbr_key}"
-
-        # Moneyline value: home side
-        home_prob = pred["home_win_prob"]
-        home_impl = row.get("_home_impl_raw")
-        if home_prob is not None and home_impl is not None:
-            edge = (home_prob - home_impl) * 100
-            if edge >= min_edge and confidence_tier(home_prob) in (
-                ["High", "Medium", "Low"] if confidence == "All" else [confidence]
-            ):
-                kelly = kelly_fraction(home_prob, row.get("_home_ml_raw"))
-                value_rows.append({
-                    "Game": matchup_label,
-                    "Bet": f"{home_abbr_key} ML",
-                    "Odds": row.get("Home ML"),
-                    "Model Prob": f"{home_prob:.1%}",
-                    "Implied": f"{home_impl:.1%}",
-                    "Edge": f"+{edge:.1f}%",
-                    "Kelly": f"{kelly:.1%}" if kelly is not None else "N/A",
-                })
-
-        # Moneyline value: away side
-        away_prob = pred["away_win_prob"]
-        away_impl = row.get("_away_impl_raw")
-        if away_prob is not None and away_impl is not None:
-            edge = (away_prob - away_impl) * 100
-            if edge >= min_edge and confidence_tier(away_prob) in (
-                ["High", "Medium", "Low"] if confidence == "All" else [confidence]
-            ):
-                kelly = kelly_fraction(away_prob, row.get("_away_ml_raw"))
-                value_rows.append({
-                    "Game": matchup_label,
-                    "Bet": f"{away_abbr_key} ML",
-                    "Odds": row.get("Away ML"),
-                    "Model Prob": f"{away_prob:.1%}",
-                    "Implied": f"{away_impl:.1%}",
-                    "Edge": f"+{edge:.1f}%",
-                    "Kelly": f"{kelly:.1%}" if kelly is not None else "N/A",
-                })
-
+        for abbrev, model_prob, implied, odds in (
+            (home_abbr_key, pred["home_win_prob"], row.get("_home_impl_raw"), row.get("_home_ml_raw")),
+            (away_abbr_key, pred["away_win_prob"], row.get("_away_impl_raw"), row.get("_away_ml_raw")),
+        ):
+            if model_prob is None or implied is None:
+                continue
+            edge = (model_prob - implied) * 100
+            if edge < min_edge or (confidence != "All" and confidence_tier(model_prob) != confidence):
+                continue
+            kelly = kelly_fraction(model_prob, odds)
+            value_rows.append({
+                "Game": matchup_label,
+                "Bet": f"{abbrev} ML",
+                "Odds": odds,
+                "Model Prob": f"{model_prob:.1%}",
+                "Implied": f"{implied:.1%}",
+                "Edge": f"+{edge:.1f}%",
+                "Kelly": f"{kelly:.1%}" if kelly is not None else "N/A",
+                "_edge": edge,
+            })
 if value_rows:
-    value_df = pd.DataFrame(value_rows).sort_values(
-        by="Edge",
-        key=lambda col: col.str.replace("[+%]", "", regex=True).astype(float),
-        ascending=False,
-    )
-    st.dataframe(value_df, width='stretch', hide_index=True)
+    value_rows.sort(key=lambda row: row["_edge"], reverse=True)
+    st.dataframe(pd.DataFrame(value_rows).drop(columns="_edge"), width='stretch', hide_index=True)
     st.caption("Moneyline edge = model win probability − implied probability from odds. Model estimates and Kelly sizing are not validated betting recommendations.")
 else:
     if not preds_lookup:
         st.info("No model predictions available for the selected date, so value bets can't be computed.")
     elif not odds_list:
-        st.info("No odds data available for the selected date, so value bets can't be computed.")
+        st.info("No matching ESPN odds available for the selected date, so value bets can't be computed.")
     else:
         st.info("No moneyline bets meet the current filters. Try lowering the minimum edge.")
 
-# Add footer
 add_betting_oracle_footer()
