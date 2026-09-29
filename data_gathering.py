@@ -39,6 +39,9 @@ SEASONS = {
     "2025-26": "20252026",  # Current season
 }
 
+# Game states that mean the result is final (FINAL = just ended, OFF = official)
+FINAL_STATES = {"FINAL", "OFF"}
+
 
 class DataGatherer:
     """Gather historical NHL data for modeling."""
@@ -55,19 +58,20 @@ class DataGatherer:
         if hasattr(self, 'session'):
             self.session.close()
     
-    def _fetch(self, url: str, cache_key: Optional[str] = None) -> Dict:
+    def _fetch(self, url: str, cache_key: Optional[str] = None, refresh: bool = False) -> Dict:
         """
         Fetch data with rate limiting and optional caching.
         
         Args:
             url: Full URL to fetch
             cache_key: Optional cache filename (without extension)
+            refresh: If True, skip reading the cache but still write the new response
         
         Returns:
             JSON response as dictionary
         """
         # Check cache first
-        if cache_key:
+        if cache_key and not refresh:
             cache_file = CACHE_DIR / f"{cache_key}.json"
             if cache_file.exists():
                 print(f"  📦 Using cached: {cache_key}")
@@ -189,7 +193,7 @@ class DataGatherer:
         season_dir: Path
     ) -> None:
         """
-        Gather all games for a season by iterating through dates.
+        Gather all games for a season by walking the weekly schedule windows.
         
         Args:
             season_name: Display name (e.g., "2023-24")
@@ -203,70 +207,129 @@ class DataGatherer:
         
         games_file = season_dir / "games.json"
         
-        # Load existing games if resuming
-        existing_games = []
-        existing_dates = set()
+        # Load existing games if resuming. Older files hold one row per weekly
+        # schedule window a game appeared in, so collapse them to one per game_id.
+        games_by_id: Dict[int, Dict] = {}
         if games_file.exists():
             existing_games = json.loads(games_file.read_text())
-            existing_dates = {g.get("date") for g in existing_games}
-            print(f"  📂 Found {len(existing_games)} existing games")
+            for existing in existing_games:
+                self._upsert_game(games_by_id, existing)
+            print(f"  📂 Found {len(existing_games)} existing rows ({len(games_by_id)} unique games)")
         
-        all_games = existing_games.copy()
         current_date = start_date
-        dates_processed = 0
+        windows_processed = 0
         
+        # Each schedule request returns a week of games starting at the requested
+        # date, so follow the API's nextStartDate instead of asking day by day.
         while current_date <= end_date:
             date_str = current_date.strftime("%Y-%m-%d")
             
-            # Skip if already processed
-            if date_str in existing_dates:
-                current_date += timedelta(days=1)
-                continue
-            
-            # Fetch schedule for date
             url = f"{BASE_WEB_API}/schedule/{date_str}"
-            schedule = self._fetch(url, cache_key=f"schedule_{date_str}")
+            cache_key = f"schedule_{date_str}"
+            schedule = self._fetch(url, cache_key=cache_key)
             
-            # Extract games
+            # A cached week saved before its games finished has stale scores
+            if schedule and self._has_unfinished_past_games(schedule):
+                schedule = self._fetch(url, cache_key=cache_key, refresh=True) or schedule
+            
+            # Extract games, dated by each game's own schedule day
             if schedule and "gameWeek" in schedule:
-                for game_week in schedule["gameWeek"]:
-                    for game in game_week.get("games", []):
-                        # Only regular season games
-                        if game.get("gameType") == 2:
-                            game_info = {
-                                "game_id": game["id"],
-                                "date": date_str,
-                                "season": season_name,
-                                "start_time": game.get("startTimeUTC"),
-                                "home_team": game["homeTeam"]["abbrev"],
-                                "away_team": game["awayTeam"]["abbrev"],
-                                "home_score": game["homeTeam"].get("score"),
-                                "away_score": game["awayTeam"].get("score"),
-                                "game_state": game.get("gameState"),
-                                "venue": game.get("venue", {}).get("default"),
-                            }
-                            
-                            # Add derived fields if game is complete
-                            if game_info["home_score"] is not None:
-                                game_info["home_won"] = game_info["home_score"] > game_info["away_score"]
-                                game_info["total_goals"] = game_info["home_score"] + game_info["away_score"]
-                                game_info["margin"] = game_info["home_score"] - game_info["away_score"]
-                                game_info["went_to_ot"] = game.get("gameState") in ["OT", "SO"]
-                            
-                            all_games.append(game_info)
+                for game_info in self._games_from_schedule(schedule, season_name):
+                    self._upsert_game(games_by_id, game_info)
             
-            dates_processed += 1
+            windows_processed += 1
             
-            # Save progress every 30 days
-            if dates_processed % 30 == 0:
-                games_file.write_text(json.dumps(all_games, indent=2))
-                print(f"  💾 Progress saved: {len(all_games)} games")
+            # Save progress every 10 windows
+            if windows_processed % 10 == 0:
+                self._save_games(games_file, games_by_id)
+                print(f"  💾 Progress saved: {len(games_by_id)} games")
             
-            current_date += timedelta(days=1)
+            current_date = self._next_window_start(schedule, current_date)
         
         # Final save
-        games_file.write_text(json.dumps(all_games, indent=2))
-        print(f"  ✅ Saved {len(all_games)} total games")
+        self._save_games(games_file, games_by_id)
+        print(f"  ✅ Saved {len(games_by_id)} unique games")
+    
+    @staticmethod
+    def _games_from_schedule(schedule: Dict, season_name: str) -> List[Dict]:
+        """Convert a schedule response into game rows dated by each game's own day."""
+        games = []
+        for game_week in schedule.get("gameWeek", []):
+            game_day = game_week.get("date")
+            if not game_day:
+                continue
+            for game in game_week.get("games", []):
+                # Only regular season games
+                if game.get("gameType") != 2:
+                    continue
+                game_info = {
+                    "game_id": game["id"],
+                    "date": game_day,
+                    "season": season_name,
+                    "start_time": game.get("startTimeUTC"),
+                    "home_team": game["homeTeam"]["abbrev"],
+                    "away_team": game["awayTeam"]["abbrev"],
+                    "home_score": game["homeTeam"].get("score"),
+                    "away_score": game["awayTeam"].get("score"),
+                    "game_state": game.get("gameState"),
+                    "venue": game.get("venue", {}).get("default"),
+                }
+                
+                # Add derived fields only once the result is final
+                if game_info["home_score"] is not None and game_info["game_state"] in FINAL_STATES:
+                    game_info["home_won"] = game_info["home_score"] > game_info["away_score"]
+                    game_info["total_goals"] = game_info["home_score"] + game_info["away_score"]
+                    game_info["margin"] = game_info["home_score"] - game_info["away_score"]
+                    last_period = (game.get("gameOutcome") or {}).get("lastPeriodType")
+                    game_info["went_to_ot"] = last_period in ("OT", "SO")
+                
+                games.append(game_info)
+        return games
+    
+    @staticmethod
+    def _upsert_game(games_by_id: Dict[int, Dict], game_info: Dict) -> None:
+        """Store one row per game_id; never replace a final result with an unfinished copy."""
+        existing = games_by_id.get(game_info["game_id"])
+        if (
+            existing is not None
+            and existing.get("game_state") in FINAL_STATES
+            and game_info.get("game_state") not in FINAL_STATES
+        ):
+            return
+        games_by_id[game_info["game_id"]] = game_info
+    
+    @staticmethod
+    def _has_unfinished_past_games(schedule: Dict) -> bool:
+        """True if a schedule week has past regular-season games that are not final."""
+        today = date.today().isoformat()
+        for game_week in schedule.get("gameWeek", []):
+            if game_week.get("date", today) >= today:
+                continue
+            for game in game_week.get("games", []):
+                if (
+                    game.get("gameType") == 2
+                    and game.get("gameScheduleState", "OK") == "OK"
+                    and game.get("gameState") not in FINAL_STATES
+                ):
+                    return True
+        return False
+    
+    @staticmethod
+    def _next_window_start(schedule: Dict, current_date: date) -> date:
+        """Return the start of the next schedule window, always moving forward."""
+        try:
+            candidate = date.fromisoformat(schedule.get("nextStartDate", ""))
+        except (TypeError, ValueError):
+            candidate = current_date + timedelta(days=7)
+        if candidate <= current_date:
+            candidate = current_date + timedelta(days=7)
+        return candidate
+    
+    @staticmethod
+    def _save_games(games_file: Path, games_by_id: Dict[int, Dict]) -> None:
+        """Write games sorted by date and game_id."""
+        games = sorted(games_by_id.values(), key=lambda g: (g.get("date") or "", g["game_id"]))
+        games_file.write_text(json.dumps(games, indent=2))
     
     def _get_season_dates(self, season_name: str) -> tuple[date, date]:
         """
@@ -476,30 +539,27 @@ class DataGatherer:
         test_dir = DATA_DIR / "test_run"
         test_dir.mkdir(parents=True, exist_ok=True)
         
-        # Gather games for 1 week
+        # Gather games for 1 week (one request returns the whole week)
         print("\n🗓️  Fetching test week of games...")
         games = []
         start = date(2024, 1, 15)
+        date_str = start.strftime("%Y-%m-%d")
         
-        for i in range(7):
-            current = start + timedelta(days=i)
-            date_str = current.strftime("%Y-%m-%d")
-            
-            url = f"{BASE_WEB_API}/schedule/{date_str}"
-            schedule = self._fetch(url)
-            
-            if schedule and "gameWeek" in schedule:
-                for game_week in schedule["gameWeek"]:
-                    for game in game_week.get("games", []):
-                        if game.get("gameType") == 2:  # Regular season
-                            games.append({
-                                "game_id": game["id"],
-                                "date": date_str,
-                                "home": game["homeTeam"]["abbrev"],
-                                "away": game["awayTeam"]["abbrev"],
-                                "home_score": game["homeTeam"].get("score"),
-                                "away_score": game["awayTeam"].get("score"),
-                            })
+        url = f"{BASE_WEB_API}/schedule/{date_str}"
+        schedule = self._fetch(url)
+        
+        if schedule and "gameWeek" in schedule:
+            for game_week in schedule["gameWeek"]:
+                for game in game_week.get("games", []):
+                    if game.get("gameType") == 2:  # Regular season
+                        games.append({
+                            "game_id": game["id"],
+                            "date": game_week.get("date", date_str),
+                            "home": game["homeTeam"]["abbrev"],
+                            "away": game["awayTeam"]["abbrev"],
+                            "home_score": game["homeTeam"].get("score"),
+                            "away_score": game["awayTeam"].get("score"),
+                        })
         
         # Save test data
         test_file = test_dir / "test_games.json"
