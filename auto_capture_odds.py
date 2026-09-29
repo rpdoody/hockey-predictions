@@ -1,108 +1,127 @@
-"""Automatically capture odds snapshots for GitHub Actions."""
+'''Automatically capture odds snapshots for GitHub Actions.'''
 import sys
+import traceback
+from datetime import datetime, timezone
 from pathlib import Path
-from datetime import datetime
+from typing import Optional
 
-# Add src to path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from src.api.nhl_client import NHLClient
+from src.utils.odds_parse import parse_line, parse_price, to_nhl_abbrev
 from src.utils.odds_storage import save_odds_snapshot
 
 
-def capture_odds_snapshots():
-    """Capture current odds for upcoming games."""
-    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Starting odds capture...")
-    
-    client = NHLClient()
-    
-    # Get odds for next 3 days (focus on near-term games)
+def _stamp() -> str:
+    return datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')
+
+
+def select_provider(odds_list: list) -> Optional[dict]:
+    '''Prefer DraftKings, otherwise the first provider listed.'''
+    for provider in odds_list:
+        if provider.get('provider') == 'DraftKings':
+            return provider
+    return odds_list[0] if odds_list else None
+
+
+def build_snapshot(game: dict) -> Optional[dict]:
+    '''Turn one parsed ESPN game into save_odds_snapshot arguments.
+
+    Returns None when the game has no usable moneyline. Markets that are not
+    offered stay None instead of being filled with made-up defaults.
+    '''
+    game_id = game.get('game_id')
+    home = to_nhl_abbrev(game.get('home_team'))
+    away = to_nhl_abbrev(game.get('away_team'))
+    if not game_id or not home or not away:
+        return None
+
+    selected = select_provider(game.get('odds', []))
+    if not selected:
+        return None
+
+    moneyline = selected.get('moneyline') or {}
+    home_ml = parse_price(moneyline.get('home'))
+    away_ml = parse_price(moneyline.get('away'))
+    if home_ml is None or away_ml is None:
+        return None
+
+    total = selected.get('total') or {}
+    over = total.get('over') or {}
+    under = total.get('under') or {}
+    line = parse_line(over.get('line'))
+    if line is None:
+        line = parse_line(under.get('line'))
+    over_odds = parse_price(over.get('odds')) if line is not None else None
+    under_odds = parse_price(under.get('odds')) if line is not None else None
+
+    spread = selected.get('spread') or {}
+    home_pl = spread.get('home') or {}
+    away_pl = spread.get('away') or {}
+
+    return {
+        'game_id': str(game_id),
+        'home_team': home,
+        'away_team': away,
+        'home_ml': home_ml,
+        'away_ml': away_ml,
+        'total': line,
+        'over_odds': over_odds,
+        'under_odds': under_odds,
+        'home_pl_odds': parse_price(home_pl.get('odds')),
+        'away_pl_odds': parse_price(away_pl.get('odds')),
+        'start_time': game.get('date'),
+        'provider': selected.get('provider'),
+    }
+
+
+def capture_odds_snapshots() -> int:
+    '''Capture odds for the next 3 days. Returns the number of errors.'''
+    print(f'[{_stamp()}] Starting odds capture...')
+
     try:
-        odds_data = client.get_espn_odds(days_ahead=3)
-        print(f"Found {len(odds_data)} games with odds data")
-        
-        if not odds_data:
-            print("ℹ️  No upcoming games found in the next 3 days")
-            print("   This is normal if there are no scheduled games")
-            return
-    except Exception as e:
-        print(f"❌ Error fetching odds: {e}")
-        import traceback
+        odds_data = NHLClient().get_espn_odds(days_ahead=3)
+    except Exception as exc:
+        print(f'ERROR fetching odds: {exc}')
         traceback.print_exc()
-        return
-    
-    captured_count = 0
-    skipped_count = 0
-    
+        return 1
+
+    print(f'Found {len(odds_data)} games')
+    captured = unchanged = skipped = errors = 0
+
     for game in odds_data:
-        game_id = game.get("game_id")
-        home_team = game.get("home_team")
-        away_team = game.get("away_team")
-        odds_list = game.get("odds", [])
-        
-        if not game_id or not home_team or not away_team:
-            skipped_count += 1
+        away = game.get('away_team')
+        home = game.get('home_team')
+        label = f'{away} @ {home}'
+
+        if not game.get('odds'):
+            print(f'No odds available for {label}')
+            skipped += 1
             continue
-        
-        # Use DraftKings odds (preferred) or first available provider
-        draftkings_odds = None
-        for odds_provider in odds_list:
-            if odds_provider.get("provider") == "DraftKings":
-                draftkings_odds = odds_provider
-                break
-        
-        # Fallback to first provider if DraftKings not available
-        selected_odds = draftkings_odds or (odds_list[0] if odds_list else None)
-        
-        if not selected_odds:
-            print(f"⚠️  No odds available for {away_team} @ {home_team}")
-            skipped_count += 1
+
+        snapshot = build_snapshot(game)
+        if snapshot is None:
+            print(f'Incomplete odds for {label}')
+            skipped += 1
             continue
-        
-        # Extract odds values with fallbacks
-        home_ml = selected_odds.get("moneyline", {}).get("home")
-        away_ml = selected_odds.get("moneyline", {}).get("away")
-        
-        total_over = selected_odds.get("total", {}).get("over", {})
-        total_under = selected_odds.get("total", {}).get("under", {})
-        total_line = total_over.get("line") or total_under.get("line")
-        over_odds = total_over.get("odds")
-        under_odds = total_under.get("odds")
-        
-        spread_home = selected_odds.get("spread", {}).get("home", {})
-        spread_away = selected_odds.get("spread", {}).get("away", {})
-        home_pl_odds = spread_home.get("odds")
-        away_pl_odds = spread_away.get("odds")
-        
-        # Only save if we have at least moneyline odds
-        if home_ml is not None and away_ml is not None:
-            try:
-                save_odds_snapshot(
-                    game_id=str(game_id),
-                    home_team=home_team,
-                    away_team=away_team,
-                    home_ml=int(home_ml),
-                    away_ml=int(away_ml),
-                    total=float(total_line) if total_line else 6.5,  # Default NHL total
-                    over_odds=int(over_odds) if over_odds else -110,
-                    under_odds=int(under_odds) if under_odds else -110,
-                    home_pl_odds=int(home_pl_odds) if home_pl_odds else -110,
-                    away_pl_odds=int(away_pl_odds) if away_pl_odds else -110
-                )
-                captured_count += 1
-                print(f"✅ Captured: {away_team} @ {home_team} (ML: {away_ml}/{home_ml})")
-            except Exception as e:
-                print(f"❌ Error saving {away_team} @ {home_team}: {e}")
-                skipped_count += 1
+
+        try:
+            written = save_odds_snapshot(**snapshot)
+        except Exception as exc:
+            print(f'ERROR saving {label}: {exc}')
+            errors += 1
+            continue
+
+        if written:
+            captured += 1
+            print(f'Captured {label}: ML {snapshot["away_ml"]}/{snapshot["home_ml"]}, total {snapshot["total"]}')
         else:
-            print(f"⚠️  Incomplete odds for {away_team} @ {home_team}")
-            skipped_count += 1
-    
-    print(f"\n📊 Summary:")
-    print(f"   ✅ Captured: {captured_count} games")
-    print(f"   ⚠️  Skipped: {skipped_count} games")
-    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Capture complete!")
+            unchanged += 1
+
+    print(f'Summary: {captured} captured, {unchanged} unchanged, {skipped} skipped, {errors} errors')
+    print(f'[{_stamp()}] Capture complete')
+    return errors
 
 
-if __name__ == "__main__":
-    capture_odds_snapshots()
+if __name__ == '__main__':
+    sys.exit(1 if capture_odds_snapshots() else 0)
