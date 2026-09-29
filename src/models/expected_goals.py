@@ -2,6 +2,12 @@
 from dataclasses import dataclass
 from typing import Tuple
 
+# Home-ice boost applied to expected goals. Backtests over 2023-24 to 2025-26
+# (point-in-time goals for/against, Poisson win probabilities) found about 0.05
+# gave the best Brier score. The previous 0.15 made two average teams a 60.6%
+# home favourite, against real home win rates of roughly 52-57%.
+DEFAULT_HOME_ADVANTAGE = 0.05
+
 
 @dataclass
 class TeamMetrics:
@@ -51,7 +57,7 @@ class TeamMetrics:
 def calculate_expected_goals(
     home_team: TeamMetrics,
     away_team: TeamMetrics,
-    home_advantage: float = 0.15,
+    home_advantage: float = DEFAULT_HOME_ADVANTAGE,
     adjustments: dict | None = None
 ) -> Tuple[float, float]:
     """
@@ -63,7 +69,7 @@ def calculate_expected_goals(
     Args:
         home_team: Home team statistics
         away_team: Away team statistics
-        home_advantage: Goal boost for home team (default 15%)
+        home_advantage: Goal boost for home team (default 5%)
         adjustments: Optional dict with "home" and "away" adjustments
             (e.g., for injuries, back-to-back, goalie)
     
@@ -74,7 +80,7 @@ def calculate_expected_goals(
         >>> home = TeamMetrics("TOR", 3.4, 2.8, 33, 28, 25, 82)
         >>> away = TeamMetrics("MTL", 2.9, 3.3, 30, 32, 20, 78)
         >>> calculate_expected_goals(home, away)
-        (3.53, 2.71)
+        (3.52, 2.78)
     """
     # Home team: their offense vs away defense
     home_xg = (home_team.goals_for_pg + away_team.goals_against_pg) / 2
@@ -106,7 +112,7 @@ def calculate_expected_goals_with_analytics(
     away_team: TeamMetrics,
     home_analytics: dict | None = None,
     away_analytics: dict | None = None,
-    home_advantage: float = 0.15,
+    home_advantage: float = DEFAULT_HOME_ADVANTAGE,
     adjustments: dict | None = None,
     analytics_weight: float = 0.50,
 ) -> Tuple[float, float]:
@@ -129,7 +135,7 @@ def calculate_expected_goals_with_analytics(
         home_analytics: NHL analytics dict for the home team (keys: xgf, xga,
             ff_pct, games_played …). Pass None to skip blending.
         away_analytics: NHL analytics dict for the away team.
-        home_advantage: Home-ice boost applied to home expected goals (default 15%).
+        home_advantage: Home-ice boost applied to home expected goals (default 5%).
         adjustments: Optional additive adjustments dict (keys: "home", "away").
         analytics_weight: Weight given to the analytics-based estimate vs the
             legacy estimate (0–1). Default 0.50; set to 0 to ignore analytics.
