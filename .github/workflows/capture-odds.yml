@@ -2,8 +2,8 @@ name: Capture NHL Odds
 
 on:
   schedule:
-    # Run every 4 hours (6 times per day to track line movement)
-    - cron: '0 1,5,9,13,17,21 * * *'  # Every 4 hours starting at 1 AM UTC
+    # Run every 6 hours (4 times per day to track line movement)
+    - cron: '0 1,7,12,17,23 * * *'  # Every 6 hours starting at 1 AM UTC
   
   workflow_dispatch:  # Allow manual trigger
 
