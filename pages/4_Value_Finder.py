@@ -81,13 +81,13 @@ selected_date = st.date_input("Select Date", value=date.today())
 st.subheader(f"Value Bets for {selected_date:%Y-%m-%d}")
 
 # Filters
-col1, col2, col3 = st.columns(3)
+col1, col2 = st.columns(2)
 with col1:
     min_edge = st.slider("Minimum Edge %", 0, 20, 3)
 with col2:
-    bet_types = st.multiselect("Bet Types", ["Moneyline", "Puck Line", "Totals"], default=["Moneyline"])
-with col3:
     confidence = st.selectbox("Model Confidence", ["All", "High", "Medium", "Low"])
+
+st.caption("Identified Value Bets currently supports moneyline only. Puck lines and totals remain visible in the odds table but are not ranked as value bets.")
 
 
 def confidence_tier(prob):
@@ -323,108 +323,58 @@ if odds_list and preds_lookup:
         matchup_label = f"{away_abbr_key} @ {home_abbr_key}"
 
         # Moneyline value: home side
-        if "Moneyline" in bet_types:
-            home_prob = pred["home_win_prob"]
-            home_impl = row.get("_home_impl_raw")
-            if home_prob is not None and home_impl is not None:
-                edge = (home_prob - home_impl) * 100
-                if edge >= min_edge and confidence_tier(home_prob) in (
-                    ["High", "Medium", "Low"] if confidence == "All" else [confidence]
-                ):
-                    kelly = kelly_fraction(home_prob, row.get("_home_ml_raw"))
-                    value_rows.append({
-                        "Game": matchup_label,
-                        "Bet": f"{home_abbr_key} ML",
-                        "Odds": row.get("Home ML"),
-                        "Model Prob": f"{home_prob:.1%}",
-                        "Implied": f"{home_impl:.1%}",
-                        "Edge": f"+{edge:.1f}%",
-                        "Kelly": f"{kelly:.1%}" if kelly is not None else "N/A",
-                    })
-
-            # Moneyline value: away side
-            away_prob = pred["away_win_prob"]
-            away_impl = row.get("_away_impl_raw")
-            if away_prob is not None and away_impl is not None:
-                edge = (away_prob - away_impl) * 100
-                if edge >= min_edge and confidence_tier(away_prob) in (
-                    ["High", "Medium", "Low"] if confidence == "All" else [confidence]
-                ):
-                    kelly = kelly_fraction(away_prob, row.get("_away_ml_raw"))
-                    value_rows.append({
-                        "Game": matchup_label,
-                        "Bet": f"{away_abbr_key} ML",
-                        "Odds": row.get("Away ML"),
-                        "Model Prob": f"{away_prob:.1%}",
-                        "Implied": f"{away_impl:.1%}",
-                        "Edge": f"+{edge:.1f}%",
-                        "Kelly": f"{kelly:.1%}" if kelly is not None else "N/A",
-                    })
-
-        # Totals value: compare model's total goal prediction against the market line
-        # using a simple heuristic (directional signal only, since a full over/under
-        # probability model isn't implemented yet).
-        if "Totals" in bet_types:
-            total_pred = pred.get("total_pred")
-            over_line = row.get("_over_line")
-            over_odds = row.get("_over_odds")
-            under_odds = row.get("_under_odds")
-            if total_pred is not None and over_line is not None:
-                try:
-                    over_line_f = float(over_line)
-                except (TypeError, ValueError):
-                    over_line_f = None
-                if over_line_f is not None:
-                    diff = total_pred - over_line_f
-                    proxy_edge = abs(diff) * 5  # heuristic scaling, in percentage points
-                    if proxy_edge >= min_edge:
-                        side = "Over" if diff > 0 else "Under"
-                        side_odds = over_odds if side == "Over" else under_odds
-                        value_rows.append({
-                            "Game": matchup_label,
-                            "Bet": f"{side} {over_line_f}",
-                            "Odds": side_odds if side_odds is not None else "N/A",
-                            "Model Prob": "N/A",
-                            "Implied": "N/A",
-                            "Edge": f"~{proxy_edge:.1f}%",
-                            "Kelly": "N/A",
-                        })
-
-        # Puck line value: no dedicated spread-win-probability model exists yet, so we
-        # surface the market line/odds without a computed edge rather than a fabricated one.
-        if "Puck Line" in bet_types:
-            home_spread_line = row.get("_home_spread_line")
-            home_spread_odds = row.get("_home_spread_odds")
-            if home_spread_line is not None and home_spread_odds is not None:
+        home_prob = pred["home_win_prob"]
+        home_impl = row.get("_home_impl_raw")
+        if home_prob is not None and home_impl is not None:
+            edge = (home_prob - home_impl) * 100
+            if edge >= min_edge and confidence_tier(home_prob) in (
+                ["High", "Medium", "Low"] if confidence == "All" else [confidence]
+            ):
+                kelly = kelly_fraction(home_prob, row.get("_home_ml_raw"))
                 value_rows.append({
                     "Game": matchup_label,
-                    "Bet": f"{home_abbr_key} {home_spread_line}",
-                    "Odds": home_spread_odds,
-                    "Model Prob": "N/A",
-                    "Implied": f"{implied_prob(home_spread_odds):.1%}" if implied_prob(home_spread_odds) else "N/A",
-                    "Edge": "N/A (no spread model yet)",
-                    "Kelly": "N/A",
+                    "Bet": f"{home_abbr_key} ML",
+                    "Odds": row.get("Home ML"),
+                    "Model Prob": f"{home_prob:.1%}",
+                    "Implied": f"{home_impl:.1%}",
+                    "Edge": f"+{edge:.1f}%",
+                    "Kelly": f"{kelly:.1%}" if kelly is not None else "N/A",
+                })
+
+        # Moneyline value: away side
+        away_prob = pred["away_win_prob"]
+        away_impl = row.get("_away_impl_raw")
+        if away_prob is not None and away_impl is not None:
+            edge = (away_prob - away_impl) * 100
+            if edge >= min_edge and confidence_tier(away_prob) in (
+                ["High", "Medium", "Low"] if confidence == "All" else [confidence]
+            ):
+                kelly = kelly_fraction(away_prob, row.get("_away_ml_raw"))
+                value_rows.append({
+                    "Game": matchup_label,
+                    "Bet": f"{away_abbr_key} ML",
+                    "Odds": row.get("Away ML"),
+                    "Model Prob": f"{away_prob:.1%}",
+                    "Implied": f"{away_impl:.1%}",
+                    "Edge": f"+{edge:.1f}%",
+                    "Kelly": f"{kelly:.1%}" if kelly is not None else "N/A",
                 })
 
 if value_rows:
     value_df = pd.DataFrame(value_rows).sort_values(
         by="Edge",
-        key=lambda col: col.str.replace("[+~%]", "", regex=True).str.replace("N/A (no spread model yet)", "-999", regex=False).astype(float),
+        key=lambda col: col.str.replace("[+%]", "", regex=True).astype(float),
         ascending=False,
     )
     st.dataframe(value_df, width='stretch', hide_index=True)
-    st.caption(
-        "Moneyline edge = model win probability \u2212 implied probability from odds. "
-        "Totals edge is a directional heuristic (model has no calibrated over/under probability yet). "
-        "Puck line rows show market odds only until a spread-specific model is added."
-    )
+    st.caption("Moneyline edge = model win probability − implied probability from odds. Model estimates and Kelly sizing are not validated betting recommendations.")
 else:
     if not preds_lookup:
         st.info("No model predictions available for the selected date, so value bets can't be computed.")
     elif not odds_list:
         st.info("No odds data available for the selected date, so value bets can't be computed.")
     else:
-        st.info("No bets meet the current filters. Try lowering the minimum edge or selecting more bet types.")
+        st.info("No moneyline bets meet the current filters. Try lowering the minimum edge.")
 
 # Add footer
 add_betting_oracle_footer()
