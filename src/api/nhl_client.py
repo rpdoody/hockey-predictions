@@ -5,6 +5,7 @@ from pathlib import Path
 from datetime import datetime, timedelta, date
 from typing import Any, Optional
 
+from src.utils.odds_parse import to_nhl_abbrev
 from src.utils.season import current_season_id
 
 
@@ -481,6 +482,9 @@ class NHLClient:
                 home_team = "Unknown"
                 away_team = "Unknown"
         
+        home_team = to_nhl_abbrev(home_team)
+        away_team = to_nhl_abbrev(away_team)
+
         game = {
             "game_id": event.get("id"),
             "name": event.get("name"),
