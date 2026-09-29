@@ -8,6 +8,17 @@ from datetime import datetime
 from .features import NHLFeatureEngineer
 from .training import NHLModelTrainer
 
+# Default stats used when a team has no history yet (early season, new franchise, etc.)
+_DEFAULT_TEAM_STATS = {
+    'goals_for_pg': 3.0,
+    'goals_against_pg': 3.0,
+    'pp_pct': 0.20,
+    'pk_pct': 0.80,
+    'win_pct': 0.5,
+    'games_played': 0,
+}
+
+
 class NHLPredictor:
     """ML-based game outcome predictor using trained models."""
 
@@ -40,6 +51,10 @@ class NHLPredictor:
         try:
             with open(self.model_path, "rb") as f:
                 self.model_data = pickle.load(f)
+            # Restore the fitted scaler onto the trainer so trainer.predict_game()
+            # doesn't fall back to a fresh, unfitted StandardScaler().
+            if self.model_data and "scaler" in self.model_data:
+                self.trainer.scaler = self.model_data["scaler"]
             print(f"Loaded model from {self.model_path}")
             return True
         except Exception as e:
@@ -60,6 +75,10 @@ class NHLPredictor:
 
         print(f"Model saved to {save_path}")
         return save_path
+
+    def _get_team_stats_for(self, team_stats: Dict[str, Dict], team: str) -> Dict:
+        """Look up a single team's flat stats dict, falling back to league defaults."""
+        return team_stats.get(team, _DEFAULT_TEAM_STATS)
 
     def predict_game(self, home_team: str, away_team: str, game_date: str = None) -> Optional[Dict[str, Any]]:
         """
@@ -89,8 +108,13 @@ class NHLPredictor:
             games_df = self.feature_engineer.load_historical_games(['2023-24', '2024-25'])
             team_stats = self.feature_engineer.load_team_stats()
 
+            # create_game_features() needs each team's individual flat stats
+            # dict, not the whole league-keyed dict load_team_stats() returns.
+            home_stats = self._get_team_stats_for(team_stats, home_team)
+            away_stats = self._get_team_stats_for(team_stats, away_team)
+
             # Create features
-            features = self.feature_engineer.create_game_features(game, games_df, team_stats)
+            features = self.feature_engineer.create_game_features(game, games_df, home_stats, away_stats)
 
             # Make prediction
             prediction = self.trainer.predict_game(self.model_data, features)
@@ -110,25 +134,6 @@ class NHLPredictor:
         except Exception as e:
             print(f"Error predicting game {away_team} @ {home_team}: {e}")
             return None
-
-    def get_model_info(self) -> Optional[Dict[str, Any]]:
-        """Get information about the loaded model."""
-        if not self.model_data:
-            return None
-
-        training_info = self.model_data.get('training_info', {})
-        return {
-            'model_path': str(self.model_path),
-            'saved_at': self.model_data.get('saved_at'),
-            'training_date': self.model_data.get('saved_at'),  # Alias for compatibility
-            'metrics': self.model_data.get('metrics', {}),
-            'n_features': len(self.model_data.get('feature_columns', [])),
-            'feature_columns': self.model_data.get('feature_columns', [])[:10],  # First 10
-            'model_type': training_info.get('model_type', 'gradient_boosting'),
-            'n_training_samples': training_info.get('n_games', 0),
-            'seasons_used': training_info.get('seasons', []),
-            'feature_importance': self.model_data.get('feature_importance', {}),
-        }
 
     def train_new_model(self, seasons: list = None, model_type: str = "gradient_boosting",
                        hyperparameter_tune: bool = False) -> bool:
@@ -155,6 +160,10 @@ class NHLPredictor:
             model_path = self.save(result, f"game_outcome_{model_type}_latest.pkl")
             self.model_path = model_path
             self.model_data = result
+            # Keep the trainer's scaler in sync with the freshly trained model
+            # so subsequent predict_game() calls use the correct fitted scaler.
+            if "scaler" in result:
+                self.trainer.scaler = result["scaler"]
 
             print("New model trained and loaded successfully")
             return True
@@ -177,14 +186,18 @@ class NHLPredictor:
         metrics = self.model_data.get('metrics', {})
 
         return {
+            'model_path': str(self.model_path),
+            'saved_at': self.model_data.get('saved_at'),
+            'training_date': training_info.get('trained_at', self.model_data.get('saved_at', 'unknown')),
+            'metrics': metrics,
             'model_type': training_info.get('model_type', 'unknown'),
-            'training_samples': training_info.get('n_games', 0),
-            'n_features': training_info.get('n_features', 0),
+            'n_features': training_info.get('n_features', len(self.model_data.get('feature_columns', []))),
+            'feature_columns': self.model_data.get('feature_columns', [])[:10],  # First 10
+            'n_training_samples': training_info.get('n_games', 0),
+            'seasons_used': training_info.get('seasons', []),
             'test_accuracy': metrics.get('test_accuracy', 0),
             'cross_val_accuracy': metrics.get('cv_accuracy_mean', 0),
             'feature_importance': self.model_data.get('feature_importance', {}),
-            'training_date': training_info.get('trained_at', 'unknown'),
-            'seasons': training_info.get('seasons', [])
         }
 
     def validate_predictions(self, test_games: list = None) -> Optional[Dict[str, Any]]:
