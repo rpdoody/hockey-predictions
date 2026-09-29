@@ -45,6 +45,10 @@ jobs:
               echo "ℹ️ No model changes to commit"
             else
               git commit -m "Weekly model retraining [skip ci]"
+              # Rebase onto whatever landed on origin/main while training ran,
+              # so a concurrent workflow (e.g. daily-game-fetch) can't cause
+              # a rejected push here.
+              git pull --rebase --autostash origin main
               git push
               echo "✅ Model updated and committed"
             fi
