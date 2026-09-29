@@ -48,6 +48,7 @@ class _FakeClient:
         _espn_game("2", "BOS", "NYR", status="Final"),
         _espn_game("3", "UTA", "SEA"),
         _espn_game("4", "EDM", "CGY"),
+        _espn_game("5", "VAN", "WPG"),
     ]
     STATS = {
         "TOR": _stats("TOR", 3.4, 2.8),
@@ -110,7 +111,7 @@ def test_stats_rows_must_belong_to_the_team_and_have_enough_games():
     assert not gen._has_enough_games({}, "TOR")
 
 
-def test_main_logs_only_valid_upcoming_games(tmp_path, monkeypatch):
+def test_main_logs_every_upcoming_game_but_recommends_only_well_sampled_ones(tmp_path, monkeypatch):
     monkeypatch.setattr(gen, "NHLClient", _FakeClient)
     monkeypatch.setattr(gen, "OUT_PATH", tmp_path / "recommendations.json")
     monkeypatch.setattr(gen, "LOG_DIR", tmp_path / "pick_log")
@@ -119,14 +120,27 @@ def test_main_logs_only_valid_upcoming_games(tmp_path, monkeypatch):
     gen.main()
 
     rows = read_pick_log(tmp_path / "pick_log")
-    assert len(rows) == 2  # one valid game, logged on each of the two runs
+    # Games 1, 3 and 4 are logged on both runs; the Final game (2) and the
+    # game with no stats at all (5) are not.
+    assert len(rows) == 6
+    assert {r["espn_game_id"] for r in rows} == {"1", "3", "4"}
+
     row = rows[0]
     assert (row["home_team"], row["away_team"]) == ("TOR", "MTL")
+    assert row["prior_only"] is False
+    assert row["home_games_played"] == 30
     assert row["game_date"] == "2026-10-08"
     assert row["game_time"] == "7:00 PM ET"
     low, high = sorted([row["home_win_prob_raw"], row["fair_home_prob"]])
     assert low <= row["home_win_prob_used"] <= high
-    assert isinstance(json.loads((tmp_path / "recommendations.json").read_text()), list)
+
+    prior = [r for r in rows if r["espn_game_id"] in {"3", "4"}]
+    assert all(r["prior_only"] is True for r in prior)
+    assert all(r["model_source"].startswith("Prior season") for r in prior)
+
+    recommendations = json.loads((tmp_path / "recommendations.json").read_text())
+    assert isinstance(recommendations, list)
+    assert all(rec["matchup"] == "MTL @ TOR" for rec in recommendations)
 
 
 def test_main_with_no_games_writes_an_empty_file_and_no_log(tmp_path, monkeypatch):
