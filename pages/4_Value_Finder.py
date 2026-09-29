@@ -190,7 +190,25 @@ try:
                 },
             )
         else:
-            st.info("Unable to compute predictions for selected date.")
+            from src.utils.odds_storage import get_game_odds_history
+            from src.utils.pick_log import read_pick_log
+            from src.utils.preliminary import display_rows, preliminary_rows
+
+            prelim = preliminary_rows(read_pick_log(), date_str, get_game_odds_history)
+            if prelim:
+                st.warning(
+                    "Season-opening preview. Model predictions start once both teams have played "
+                    "20 games this season. Until then these rows use ratings from last season, "
+                    "blended toward the market, and are never treated as value bets."
+                )
+                st.dataframe(pd.DataFrame(display_rows(prelim)), width='stretch', hide_index=True)
+                st.caption(
+                    "Last logged " + max(row["logged_at"] for row in prelim) + ". "
+                    "Expected total is the sum of each team's expected goals from the raw model "
+                    "and is not validated."
+                )
+            else:
+                st.info("Unable to compute predictions for selected date. Nothing has been logged for it yet.")
     else:
         st.info("No NHL games scheduled for that date.")
 except Exception as e:
@@ -307,7 +325,7 @@ if value_rows:
     st.caption("Moneyline edge = model win probability − implied probability from odds. Model estimates and Kelly sizing are not validated betting recommendations.")
 else:
     if not preds_lookup:
-        st.info("No model predictions available for the selected date, so value bets can't be computed.")
+        st.info("Value bets need model predictions, which start once both teams have played 20 games this season. Preliminary rows above are for information only and are never flagged as value bets.")
     elif not odds_list:
         st.info("No matching ESPN odds available for the selected date, so value bets can't be computed.")
     else:
