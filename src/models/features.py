@@ -42,8 +42,10 @@ class NHLFeatureEngineer:
         df['date'] = pd.to_datetime(df['date'])
         df = df.sort_values(['date', 'game_id']).reset_index(drop=True)
         
-        # Remove duplicates by game_id (keep first occurrence)
-        df = df.drop_duplicates(subset='game_id', keep='first')
+        # Each game appears in up to 7 daily schedule windows, and each row is
+        # stamped with the date that was requested. The latest stamp equals the
+        # game's actual local date, so keep the last row for each game_id.
+        df = df.drop_duplicates(subset='game_id', keep='last').reset_index(drop=True)
 
         return df
 
