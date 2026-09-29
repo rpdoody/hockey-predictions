@@ -49,3 +49,25 @@ def test_display_rows_format_and_handle_missing_odds():
     assert table[0]['Gap vs market'] == '+3.0 pts'
     assert table[1]['Market home win %'] == 'n/a'
     assert table[1]['Gap vs market'] == 'n/a'
+    assert table[0]['Expected total'] == 'n/a'
+    assert table[0]['Total gap'] == 'n/a'
+
+
+def test_expected_total_uses_logged_xg_and_latest_market_total():
+    rows = [_row('A', '2026-10-08T07:00:00+00:00', 0.53, home_xg=3.1, away_xg=2.9)]
+    histories = {'A': {'snapshots': [{'total': None}, {'total': 6.5}, {'total': None}]}}
+    out = preliminary_rows(rows, '2026-10-08', histories.get)
+    assert out[0]['expected_total'] == pytest.approx(6.0)
+    assert out[0]['market_total'] == 6.5
+    assert out[0]['total_gap'] == pytest.approx(-0.5)
+    table = display_rows(out)
+    assert table[0]['Expected total'] == '6.00'
+    assert table[0]['Market total'] == '6.5'
+    assert table[0]['Total gap'] == '-0.50'
+
+
+def test_missing_history_leaves_market_total_empty():
+    rows = [_row('A', '2026-10-08T07:00:00+00:00', 0.53, home_xg=3.1, away_xg=2.9)]
+    out = preliminary_rows(rows, '2026-10-08', {}.get)
+    assert out[0]['expected_total'] == pytest.approx(6.0)
+    assert out[0]['market_total'] is None and out[0]['total_gap'] is None
