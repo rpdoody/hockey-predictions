@@ -147,7 +147,9 @@ Thumbs.db
 # Project specific
 # Cache files
 data_files/cache/
-data_files/results/
+data_files/results/*
+!data_files/results/final_scores.json
+!data_files/results/scorecard.json
 data_files/predictions/
 
 # Temporary data files (uncomment if you want to commit sample data)
