@@ -2,24 +2,28 @@ name: Daily Game Schedule Fetch
 
 on:
   schedule:
-    # Run daily at 7 AM UTC (2 AM ET)
+    # Run daily at 7 AM UTC (3 AM ET)
     - cron: '0 7 * * *'
-  workflow_dispatch:  # Allow manual trigger
-  
+  workflow_dispatch:
+
 permissions:
   contents: write
-  
+
+concurrency:
+  group: repo-data-writes
+  cancel-in-progress: false
+
 jobs:
   fetch-schedules:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.13'
           cache: 'pip'
@@ -30,30 +34,26 @@ jobs:
           pip install -r requirements.txt
 
       - name: Fetch game schedules
-        run: |
-          python auto_fetch_games.py --days 10
+        run: python auto_fetch_games.py --days 10
 
       - name: Commit schedule cache updates
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          
-          # Add cache directory (force add since cache is ignored)
-          git add -f data_files/cache/api-web.nhle.com_v1_schedule_*.json
-          
-          # Check if there are changes
+          # Force add since the cache is ignored; tolerate no matching files
+          git add -f data_files/cache/api-web.nhle.com_v1_schedule_*.json || true
           if git diff --staged --quiet; then
             echo "No schedule changes to commit"
-          else
-            GAME_COUNT=$(git diff --staged --numstat | wc -l)
-            git commit -m "chore: update game schedules (${GAME_COUNT} files updated)"
-            git push
-            echo "Committed ${GAME_COUNT} schedule updates"
+            exit 0
           fi
+          GAME_COUNT=$(git diff --staged --numstat | wc -l)
+          git commit -m "chore: update game schedules (${GAME_COUNT} files updated)"
+          git pull --rebase --autostash origin main
+          git push
+          echo "Committed ${GAME_COUNT} schedule updates"
 
       - name: Generate NHL recommendations
         run: python scripts/generate_recommendations.py
-        continue-on-error: true
         env:
           PYTHONPATH: ${{ github.workspace }}
 
@@ -64,10 +64,22 @@ jobs:
           PYTHONPATH: ${{ github.workspace }}
 
       - name: Commit best_bets_today.json and the pick log
+        if: always()
         run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
           git add data_files/best_bets_today.json || true
           git add data_files/pick_log || true
-          git diff --staged --quiet || git commit -m "chore: update best_bets_today and pick log [skip ci]"
-          git pull --rebase --autostash origin main
-          git push
-        continue-on-error: true
+          if git diff --staged --quiet; then
+            echo "Nothing to commit"
+            exit 0
+          fi
+          git commit -m "chore: update best_bets_today and pick log [skip ci]"
+          for attempt in 1 2 3; do
+            if git pull --rebase --autostash origin main && git push; then
+              exit 0
+            fi
+            echo "Push attempt ${attempt} failed, retrying"
+            sleep 5
+          done
+          exit 1
