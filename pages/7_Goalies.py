@@ -30,7 +30,7 @@ try:
     import httpx
     url = "https://api.nhle.com/stats/rest/en/goalie/summary"
     params = {
-        "cayenneExp": "seasonId=20252026",
+        "cayenneExp": f"seasonId={client.display_season()}",
         "sort": "savePct",
         "direction": "DESC",
         "limit": 100
@@ -71,7 +71,7 @@ except Exception as e:
 # Fetch goalie analytics (GSAA, HD SV%, danger-zone saves)
 goalie_analytics: dict[str, dict] = {}
 try:
-    advanced_data = client.get_goalie_analytics(season="20252026", limit=100)
+    advanced_data = client.get_goalie_analytics(limit=100)
     for row in advanced_data:
         n = row.get("name", "")
         goalie_analytics[n] = row

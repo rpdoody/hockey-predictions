@@ -151,7 +151,7 @@ try:
 
             analytics_error = None
             try:
-                all_analytics = client.get_team_analytics(season="20252026")
+                all_analytics = client.get_team_analytics()
                 team_adv = all_analytics.get(selected_team)
             except Exception as exc:
                 all_analytics = {}

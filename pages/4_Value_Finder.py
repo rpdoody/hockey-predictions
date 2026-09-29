@@ -8,6 +8,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
+from src.utils.season import current_season_id
 from src.api.nhl_client import NHLClient
 from footer import add_betting_oracle_footer
 from src.models.expected_goals import (
@@ -119,7 +120,7 @@ try:
     if games_list:
         analytics_data = {}
         try:
-            analytics_data = client.get_team_analytics(season="20252026")
+            analytics_data = client.get_team_analytics(season=current_season_id())
         except Exception:
             analytics_data = {}
 
@@ -134,9 +135,11 @@ try:
             venue_timezone = game.get("venueTimezone")
             if venue_timezone:
                 schedule_games[(away_key, home_key)] = venue_timezone
-            home_stats = client.get_team_summary(home_abbr)
-            away_stats = client.get_team_summary(away_abbr)
-            if home_stats and away_stats:
+            home_stats = client.get_team_summary(home_abbr, season=current_season_id())
+            away_stats = client.get_team_summary(away_abbr, season=current_season_id())
+            if (home_stats and away_stats
+                    and home_stats.get("team") == home_abbr and away_stats.get("team") == away_abbr
+                    and min(home_stats.get("games_played", 0), away_stats.get("games_played", 0)) >= 20):
                 home_tm = TeamMetrics.from_api_response(home_stats)
                 away_tm = TeamMetrics.from_api_response(away_stats)
 
