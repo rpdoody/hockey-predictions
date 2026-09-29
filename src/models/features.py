@@ -91,8 +91,6 @@ class NHLFeatureEngineer:
                 abbrev = 'DET'
             elif 'PANTHERS' in team_name:
                 abbrev = 'FLA'
-            elif 'CANADIENS' in team_name:
-                abbrev = 'MTL'
             elif 'LIGHTNING' in team_name:
                 abbrev = 'TBL'
             elif 'HURRICANES' in team_name:
@@ -133,7 +131,7 @@ class NHLFeatureEngineer:
                 abbrev = 'ARI'
             elif 'SHARKS' in team_name:
                 abbrev = 'SJS'
-            elif 'KRaken' in team_name.upper():
+            elif 'KRAKEN' in team_name:
                 abbrev = 'SEA'
             else:
                 # Fallback: take first 3 letters
@@ -319,7 +317,8 @@ class NHLFeatureEngineer:
 
     def create_game_features(self, game: Dict, games_df: pd.DataFrame, home_stats: Dict, away_stats: Dict) -> Dict:
         """
-        Create simplified feature vector for a game.
+        Create feature vector for a game, combining season-level team stats
+        with recent-form and rest-advantage signals.
 
         Args:
             game: Game dictionary with home_team, away_team, date, etc.
@@ -330,7 +329,6 @@ class NHLFeatureEngineer:
         Returns:
             Dictionary of features for ML model
         """
-        # Simplified features - just basic team stats
         features = {
             # Team strength indicators
             'home_goal_diff': home_stats['goals_for_pg'] - home_stats['goals_against_pg'],
@@ -348,6 +346,67 @@ class NHLFeatureEngineer:
             'pp_pct_advantage': home_stats['pp_pct'] - away_stats['pp_pct'],
             'pk_pct_advantage': home_stats['pk_pct'] - away_stats['pk_pct'],
         }
+
+        # Recent form and rest-advantage features require a game date and the
+        # historical games DataFrame; both are optional so this still works
+        # when called with a games_df that lacks a usable 'date' column
+        # (e.g. an empty DataFrame passed in unit tests).
+        game_date = game.get('date')
+        if game_date is not None and not games_df.empty and 'date' in games_df.columns:
+            game_date = pd.to_datetime(game_date)
+            home_team = game.get('home_team')
+            away_team = game.get('away_team')
+
+            home_form = self.calculate_recent_form(games_df, home_team, game_date)
+            away_form = self.calculate_recent_form(games_df, away_team, game_date)
+            rest = self.calculate_rest_advantage(games_df, home_team, away_team, game_date)
+
+            features.update({
+                'home_recent_win_pct': home_form['recent_win_pct'],
+                'home_recent_goals_for_pg': home_form['recent_goals_for_pg'],
+                'home_recent_goals_against_pg': home_form['recent_goals_against_pg'],
+                'home_recent_home_win_pct': home_form['recent_home_win_pct'],
+                'home_recent_away_win_pct': home_form['recent_away_win_pct'],
+
+                'away_recent_win_pct': away_form['recent_win_pct'],
+                'away_recent_goals_for_pg': away_form['recent_goals_for_pg'],
+                'away_recent_goals_against_pg': away_form['recent_goals_against_pg'],
+                'away_recent_home_win_pct': away_form['recent_home_win_pct'],
+                'away_recent_away_win_pct': away_form['recent_away_win_pct'],
+
+                'recent_form_advantage': home_form['recent_win_pct'] - away_form['recent_win_pct'],
+
+                'home_rest_days': rest['home_rest_days'],
+                'away_rest_days': rest['away_rest_days'],
+                'rest_advantage': rest['rest_advantage'],
+                'is_home_back_to_back': int(rest['is_home_back_to_back']),
+                'is_away_back_to_back': int(rest['is_away_back_to_back']),
+            })
+        else:
+            # Fill with neutral defaults so downstream code always sees a
+            # consistent feature schema even when recent-form/rest can't be
+            # computed (e.g. missing date, or no prior games in games_df).
+            features.update({
+                'home_recent_win_pct': 0.5,
+                'home_recent_goals_for_pg': 3.0,
+                'home_recent_goals_against_pg': 3.0,
+                'home_recent_home_win_pct': 0.5,
+                'home_recent_away_win_pct': 0.5,
+
+                'away_recent_win_pct': 0.5,
+                'away_recent_goals_for_pg': 3.0,
+                'away_recent_goals_against_pg': 3.0,
+                'away_recent_home_win_pct': 0.5,
+                'away_recent_away_win_pct': 0.5,
+
+                'recent_form_advantage': 0.0,
+
+                'home_rest_days': 3,
+                'away_rest_days': 3,
+                'rest_advantage': 0,
+                'is_home_back_to_back': 0,
+                'is_away_back_to_back': 0,
+            })
 
         return features
 
@@ -379,7 +438,7 @@ class NHLFeatureEngineer:
                 continue
 
             try:
-                features = self.create_game_features(game, games_df, home_stats, away_stats)
+                features = self.create_game_features(game.to_dict(), games_df, home_stats, away_stats)
                 features_list.append(features)
                 targets.append(int(game['home_won']))
             except Exception as e:
