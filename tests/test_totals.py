@@ -22,7 +22,6 @@ def test_totals_at_quoted_line(line, under_max, push_goals):
     assert prediction.over_prob + prediction.under_prob + prediction.push_prob == pytest.approx(1.0, abs=0.00011)
 
 
-@pytest.mark.xfail(strict=True, reason="predict_total does not yet validate expected-goals inputs")
 @pytest.mark.parametrize("home_xg,away_xg", [(-1.0, 3.0), (math.nan, 3.0), (math.inf, 3.0), (3.0, -1.0), (3.0, math.inf)])
 def test_invalid_expected_goals_are_rejected(home_xg, away_xg):
     with pytest.raises(ValueError):
@@ -34,7 +33,6 @@ def test_nan_line_is_rejected():
         predict_total(3.0, 3.0, line=math.nan)
 
 
-@pytest.mark.xfail(strict=True, reason="predict_total does not yet validate total lines")
 @pytest.mark.parametrize("line", [-0.5, math.inf, 6.25])
 def test_invalid_line_is_rejected(line):
     with pytest.raises(ValueError):
