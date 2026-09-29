@@ -80,6 +80,24 @@ class NHLPredictor:
         """Look up a single team's flat stats dict, falling back to league defaults."""
         return team_stats.get(team, _DEFAULT_TEAM_STATS)
 
+    def _history_seasons(self, count: int = 3) -> list:
+        """Latest seasons that have a games.json on disk, oldest first."""
+        root = self.feature_engineer.historical_data_path
+        return sorted(path.parent.name for path in root.glob("*/games.json"))[-count:]
+
+    def _load_history(self) -> pd.DataFrame:
+        """Load recent completed games, using the same filter as training."""
+        games_df = self.feature_engineer.load_historical_games(self._history_seasons())
+        result_cols = [c for c in ('home_score', 'away_score', 'home_won') if c in games_df.columns]
+        return games_df.dropna(subset=result_cols).reset_index(drop=True)
+
+    def _point_in_time_stats(self, games_df: pd.DataFrame, home_team: str, away_team: str, game_date) -> tuple:
+        """Season stats computed as in training, from games before game_date only."""
+        as_of = pd.to_datetime(game_date)
+        home_stats = self.feature_engineer.compute_team_stats_up_to(home_team, as_of, games_df)
+        away_stats = self.feature_engineer.compute_team_stats_up_to(away_team, as_of, games_df)
+        return home_stats, away_stats
+
     def predict_game(self, home_team: str, away_team: str, game_date: str = None) -> Optional[Dict[str, Any]]:
         """
         Predict the outcome of a game.
@@ -104,14 +122,12 @@ class NHLPredictor:
                 'date': game_date or datetime.now().strftime("%Y-%m-%d")
             }
 
-            # Load historical data and team stats
-            games_df = self.feature_engineer.load_historical_games(['2023-24', '2024-25'])
-            team_stats = self.feature_engineer.load_team_stats()
-
-            # create_game_features() needs each team's individual flat stats
-            # dict, not the whole league-keyed dict load_team_stats() returns.
-            home_stats = self._get_team_stats_for(team_stats, home_team)
-            away_stats = self._get_team_stats_for(team_stats, away_team)
+            # Build history and season stats exactly as training does: completed
+            # games from the latest seasons, with stats from games before the date.
+            games_df = self._load_history()
+            home_stats, away_stats = self._point_in_time_stats(
+                games_df, home_team, away_team, game['date']
+            )
 
             # Create features
             features = self.feature_engineer.create_game_features(game, games_df, home_stats, away_stats)
