@@ -16,6 +16,17 @@ import seaborn as sns
 
 from .features import NHLFeatureEngineer
 
+# Default stats used when a team has no history yet (early season, new franchise, etc.)
+_DEFAULT_TEAM_STATS = {
+    'goals_for_pg': 3.0,
+    'goals_against_pg': 3.0,
+    'pp_pct': 0.20,
+    'pk_pct': 0.80,
+    'win_pct': 0.5,
+    'games_played': 0,
+}
+
+
 class NHLModelTrainer:
     """Training pipeline for NHL prediction models."""
 
@@ -349,12 +360,21 @@ class NHLModelTrainer:
         actual_outcomes = []
         predicted_probabilities = []
 
+        # Look up each team's stats once, rather than re-loading the full
+        # league-wide stats dict for every single game in the validation set.
+        team_stats = self.feature_engineer.load_team_stats()
+
         for _, game in validation_games.iterrows():
             try:
+                game_dict = game.to_dict()
+                home_stats = team_stats.get(game_dict.get('home_team'), _DEFAULT_TEAM_STATS)
+                away_stats = team_stats.get(game_dict.get('away_team'), _DEFAULT_TEAM_STATS)
+
                 features = self.feature_engineer.create_game_features(
-                    game.to_dict(),
+                    game_dict,
                     validation_games,
-                    self.feature_engineer.load_team_stats()
+                    home_stats,
+                    away_stats,
                 )
 
                 prediction = self.predict_game(model_data, features)
