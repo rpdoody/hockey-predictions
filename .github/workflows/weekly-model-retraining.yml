@@ -4,8 +4,10 @@ on:
   schedule:
     # Run weekly on Sundays at 8 AM UTC (3 AM ET)
     - cron: '0 8 * * 0'
+  workflow_dispatch:
 
-  workflow_dispatch:  # Allow manual trigger
+permissions:
+  contents: write
 
 jobs:
   retrain-model:
@@ -15,8 +17,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python
         uses: actions/setup-python@v7
@@ -30,28 +30,31 @@ jobs:
           pip install -r requirements.txt
 
       - name: Retrain ML model
-        run: |
-          python retrain_model.py
+        run: python retrain_model.py
 
       - name: Commit and push updated model
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
 
-          # Check if models directory has changes
-          if [ -d "data_files/models" ]; then
-            git add data_files/models/
-            if git diff --staged --quiet; then
-              echo "ℹ️ No model changes to commit"
-            else
-              git commit -m "Weekly model retraining [skip ci]"
-              # Rebase onto whatever landed on origin/main while training ran,
-              # so a concurrent workflow (e.g. daily-game-fetch) can't cause
-              # a rejected push here.
-              git pull --rebase --autostash origin main
-              git push
-              echo "✅ Model updated and committed"
-            fi
-          else
-            echo "⚠️ Models directory not found"
+          if [ ! -d "data_files/models" ]; then
+            echo "Models directory not found"
+            exit 1
           fi
+
+          git add data_files/models/
+          if git diff --staged --quiet; then
+            echo "No model changes to commit"
+            exit 0
+          fi
+
+          git commit -m "Weekly model retraining [skip ci]"
+          for attempt in 1 2 3; do
+            if git pull --rebase --autostash origin main && git push; then
+              echo "Model updated and committed"
+              exit 0
+            fi
+            echo "Push attempt ${attempt} failed, retrying"
+            sleep 5
+          done
+          exit 1
