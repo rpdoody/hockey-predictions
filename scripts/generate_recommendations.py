@@ -2,17 +2,19 @@
 scripts/generate_recommendations.py — NHL (hockey-predictions)
 
 Generates data_files/recommendations.json by:
-  1. Fetching today's NHL schedule (and next few days)
-  2. Loading team stats and analytics
+  1. Fetching upcoming NHL games (next few days) with ESPN DraftKings odds
+  2. Loading current-season team stats and analytics
   3. Running the xG / win-probability model
-  4. Comparing to ESPN DraftKings odds
+  4. Shrinking the model toward the market's vig-free probability
   5. Writing picks with positive edge
+
+Every game the model evaluates is also appended to data_files/pick_log/ so the
+predictions can be scored against real results later.
 
 Reads by: scripts/export_best_bets.py (which then writes best_bets_today.json)
 """
 import json
 import sys
-from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 # Add repo root to path
@@ -26,10 +28,15 @@ from src.models.expected_goals import (
     calculate_expected_goals_with_analytics,
 )
 from src.models.win_probability import calculate_win_probability
+from src.utils.pick_log import append_pick_log
+from src.utils.season import current_season_id, to_eastern
 
 OUT_PATH = ROOT / "data_files" / "recommendations.json"
+LOG_DIR = ROOT / "data_files" / "pick_log"
 MIN_EDGE = 0.03           # only include picks with ≥3 % edge
 LOOKAHEAD_DAYS = 7
+MIN_GAMES_PLAYED = 20     # the model was only evaluated once both teams had played this many
+SHRINK_KEEP = 0.5         # share of the model's disagreement with the market that is kept
 
 
 def _american_to_prob(odds: int | float | str | None) -> float | None:
@@ -56,12 +63,42 @@ def _tier(edge: float) -> str:
     return "Standard"
 
 
+def fair_home_probability(home_implied: float | None, away_implied: float | None) -> float | None:
+    """Remove the vig from a two-way moneyline to get the market's home win probability."""
+    if home_implied is None or away_implied is None:
+        return None
+    total = home_implied + away_implied
+    if total <= 0:
+        return None
+    return home_implied / total
+
+
+def shrink_toward_market(model_prob: float, fair_prob: float | None, keep: float = SHRINK_KEEP) -> float:
+    """Keep only part of the model's disagreement with the market."""
+    if fair_prob is None:
+        return model_prob
+    return fair_prob + keep * (model_prob - fair_prob)
+
+
+def _has_enough_games(stats: dict, abbrev: str) -> bool:
+    """True when the stats row really belongs to this team and it has played enough games."""
+    if not stats:
+        return False
+    if stats.get("team") != abbrev:
+        return False
+    return (stats.get("games_played") or 0) >= MIN_GAMES_PLAYED
+
+
+def _is_scheduled(game: dict) -> bool:
+    return str(game.get("status", "")).strip().lower() == "scheduled"
+
+
 def main() -> None:
-    today = date.today()
     client = NHLClient(cache_ttl_minutes=60)
+    season_id = current_season_id()
 
     # ── 1. Fetch upcoming games with odds ──────────────────────────────────────
-    print("[generate_recommendations] Fetching upcoming games with odds...")
+    print(f"[generate_recommendations] Season {season_id}. Fetching upcoming games with odds...")
     try:
         odds_games = client.get_espn_odds(days_ahead=LOOKAHEAD_DAYS)
     except Exception as e:
@@ -77,20 +114,34 @@ def main() -> None:
     # ── 2. Load team analytics (best effort) ─────────────────────────────
     print("[generate_recommendations] Loading team analytics...")
     try:
-        analytics_data = client.get_team_analytics(season="20252026")
+        analytics_data = client.get_team_analytics(season=season_id)
     except Exception as e:
         print(f"[generate_recommendations] Analytics fetch failed: {e} — using legacy model")
         analytics_data = {}
 
     # ── 3. Build recommendations ────────────────────────────────────────
     recommendations = []
+    log_records = []
 
     for game in odds_games:
         home_abbr = game.get("home_team")
         away_abbr = game.get("away_team")
-        game_date_str = (game.get("date") or "")[:10]  # ISO date portion
 
         if not home_abbr or not away_abbr:
+            continue
+
+        if not _is_scheduled(game):
+            continue
+
+        # Dates and times in Eastern, not the runner's UTC
+        start_et = to_eastern(game.get("date", ""))
+        if start_et is not None:
+            game_date = start_et.date().isoformat()
+            game_time = start_et.strftime("%-I:%M %p ET")
+        else:
+            game_date = (game.get("date") or "")[:10]
+            game_time = ""
+        if not game_date:
             continue
 
         # Parse DraftKings odds (prefer DK, fall back to first provider)
@@ -110,13 +161,16 @@ def main() -> None:
 
         # ── 4. Team stats for xG model ────────────────────────────
         try:
-            home_stats = client.get_team_summary(home_abbr) or {}
-            away_stats = client.get_team_summary(away_abbr) or {}
+            home_stats = client.get_team_summary(home_abbr, season=season_id) or {}
+            away_stats = client.get_team_summary(away_abbr, season=season_id) or {}
         except Exception:
             home_stats = away_stats = {}
 
-        if not home_stats or not away_stats:
-            print(f"[generate_recommendations] No stats for {away_abbr} @ {home_abbr} — skipping")
+        if not _has_enough_games(home_stats, home_abbr) or not _has_enough_games(away_stats, away_abbr):
+            print(
+                f"[generate_recommendations] Not enough {season_id} data for "
+                f"{away_abbr} @ {home_abbr} — skipping"
+            )
             continue
 
         try:
@@ -151,19 +205,36 @@ def main() -> None:
             print(f"[generate_recommendations] Win prob error for {away_abbr} @ {home_abbr}: {e}")
             continue
 
-        home_win_prob = probs.home_win
-        away_win_prob = probs.away_win
+        raw_home_prob = probs.home_win
+        raw_away_prob = probs.away_win
 
-        # Game time (human-readable)
-        raw_dt = game.get("date", "")
-        try:
-            game_dt = datetime.fromisoformat(raw_dt.replace("Z", "+00:00"))
-            game_time = game_dt.astimezone().strftime("%-I:%M %p ET")
-        except Exception:
-            game_time = ""
+        # Shrink toward the market until the model has proven itself against odds
+        fair_home = fair_home_probability(home_implied, away_implied)
+        home_win_prob = shrink_toward_market(raw_home_prob, fair_home)
+        away_win_prob = 1.0 - home_win_prob if fair_home is not None else raw_away_prob
 
         matchup = f"{away_abbr} @ {home_abbr}"
-        game_date = game_date_str or today.isoformat()
+
+        log_records.append({
+            "espn_game_id":       game.get("game_id"),
+            "game_date":          game_date,
+            "game_time":          game_time,
+            "start_utc":          game.get("date"),
+            "home_team":          home_abbr,
+            "away_team":          away_abbr,
+            "season_id":          season_id,
+            "model_source":       model_source,
+            "home_games_played":  home_stats.get("games_played"),
+            "away_games_played":  away_stats.get("games_played"),
+            "home_xg":            home_xg,
+            "away_xg":            away_xg,
+            "home_win_prob_raw":  round(raw_home_prob, 4),
+            "away_win_prob_raw":  round(raw_away_prob, 4),
+            "home_win_prob_used": round(home_win_prob, 4),
+            "fair_home_prob":     None if fair_home is None else round(fair_home, 4),
+            "home_ml":            home_ml,
+            "away_ml":            away_ml,
+        })
 
         # ── 5. Edge calculation ──────────────────────────────────────
         if home_implied is not None:
@@ -178,6 +249,7 @@ def main() -> None:
                     "bet_type":       "ML",
                     "recommendation": home_abbr,
                     "model_prob":     round(home_win_prob, 4),
+                    "model_prob_raw": round(raw_home_prob, 4),
                     "edge":           round(home_edge, 4),
                     "odds":           home_ml,
                     "notes":          model_source,
@@ -195,6 +267,7 @@ def main() -> None:
                     "bet_type":       "ML",
                     "recommendation": away_abbr,
                     "model_prob":     round(away_win_prob, 4),
+                    "model_prob_raw": round(raw_away_prob, 4),
                     "edge":           round(away_edge, 4),
                     "odds":           away_ml,
                     "notes":          model_source,
@@ -203,7 +276,10 @@ def main() -> None:
     # ── 6. Write output ────────────────────────────────────────────
     OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     OUT_PATH.write_text(json.dumps(recommendations, indent=2, ensure_ascii=False))
+    log_path = append_pick_log(log_records, LOG_DIR)
     print(f"[generate_recommendations] Wrote {len(recommendations)} recommendations → {OUT_PATH}")
+    if log_path:
+        print(f"[generate_recommendations] Logged {len(log_records)} evaluated games → {log_path}")
 
 
 if __name__ == "__main__":

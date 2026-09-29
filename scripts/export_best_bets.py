@@ -1,4 +1,4 @@
-﻿"""
+"""
 scripts/export_best_bets.py — NHL (hockey-predictions)
 Reads data_files/recommendations.json (Value Finder output) and writes
 data_files/best_bets_today.json in the unified Sports Picks Grid schema.
@@ -7,6 +7,7 @@ import json
 import sys
 from datetime import date, datetime, timezone
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 SPORT = "NHL"
 MODEL_VERSION = "1.0.0"
@@ -49,7 +50,8 @@ def _tier_from_edge(edge: float) -> str:
 
 
 def main() -> None:
-    today = date.today()
+    # "Today" is the Eastern date, matching how game dates are recorded
+    today = datetime.now(ZoneInfo("America/New_York")).date()
 
     if not SRC_PATH.exists():
         _write([], f"Source file not found: {SRC_PATH}")
