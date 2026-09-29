@@ -2,47 +2,42 @@ name: Capture NHL Odds
 
 on:
   schedule:
-    # Run every 6 hours (4 times per day to track line movement)
-    - cron: '0 1,7,12,17,23 * * *'  # Every 6 hours starting at 1 AM UTC
-  
-  workflow_dispatch:  # Allow manual trigger
+    - cron: '0 1,7,12,17,23 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: repo-data-writes
+  cancel-in-progress: false
 
 jobs:
   capture-odds:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v7
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-      
-      - name: Set up Python
-        uses: actions/setup-python@v7
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.13'
           cache: 'pip'
-      
-      - name: Install dependencies
-        run: |
+      - run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-      
       - name: Capture odds snapshots
-        run: |
-          python auto_capture_odds.py
-      
+        run: python auto_capture_odds.py
       - name: Commit and push changes
+        if: always()
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          # Create odds directory if it doesn't exist
           mkdir -p data_files/odds
-          # Add files if any exist
-          if [ -n "$(find data_files/odds -type f -name '*.json' 2>/dev/null)" ]; then
-            git add data_files/odds/
-            git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update odds snapshots [skip ci]" && git push)
-          else
+          git add data_files/odds/
+          if git diff --staged --quiet; then
             echo "No new odds files to commit"
+            exit 0
           fi
+          git commit -m "Auto-update odds snapshots [skip ci]"
+          git pull --rebase origin main
+          git push
