@@ -425,6 +425,11 @@ class NHLFeatureEngineer:
         """
         games_df = self.load_historical_games(seasons)
 
+        # Games without a final result (postponed, in progress, or missing
+        # fields) can't serve as training rows or as history for later games.
+        result_cols = [c for c in ('home_score', 'away_score', 'home_won') if c in games_df.columns]
+        games_df = games_df.dropna(subset=result_cols).reset_index(drop=True)
+
         features_list = []
         targets = []
 
@@ -440,12 +445,16 @@ class NHLFeatureEngineer:
                 continue
 
             try:
+                # Resolve the target before building features so a failure can
+                # never leave a features row without a matching target.
+                target = int(game['home_won'])
                 features = self.create_game_features(game.to_dict(), games_df, home_stats, away_stats)
-                features_list.append(features)
-                targets.append(int(game['home_won']))
             except Exception as e:
                 print(f"Error processing game {game['game_id']}: {e}")
                 continue
+
+            features_list.append(features)
+            targets.append(target)
 
         features_df = pd.DataFrame(features_list)
         targets_series = pd.Series(targets, name='home_win')
