@@ -10,7 +10,16 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "scripts"))
 
-import generate_recommendations as gen
+import importlib.util
+
+_module_path = ROOT / "scripts" / "generate_recommendations.py"
+_spec = importlib.util.spec_from_file_location("generate_recommendations", _module_path)
+if _spec is None or _spec.loader is None:
+    raise ImportError(f"Could not load generate_recommendations from {_module_path}")
+
+gen = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(gen)
+
 from src.utils.pick_log import append_pick_log, read_pick_log
 from src.utils.season import current_season_id, current_season_name, to_eastern
 

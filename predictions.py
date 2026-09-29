@@ -11,7 +11,7 @@ from footer import add_betting_oracle_footer
 
 # Page configuration — called ONCE here; sub-pages must NOT call set_page_config
 st.set_page_config(
-    page_title="Oracle on Ice - Hockey Predictions",
+    page_title="Hockey Predictions",
     page_icon="🏒",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -33,12 +33,12 @@ def home_page():
     """Landing page content."""
     client = get_client()
 
-    st.sidebar.title("Oracle on Ice - Hockey Predictions")
+    st.sidebar.title("Hockey Predictions")
     st.sidebar.markdown("NHL Betting Analytics")
     st.sidebar.divider()
 
     # Main content - Landing Page
-    st.title("🏒 Oracle on Ice - Hockey Predictions")
+    st.title("🏒 Hockey Predictions")
     st.markdown("### Your Data-Driven Guide to NHL Betting")
 
     # Hero section with key stats
