@@ -5,6 +5,8 @@ from pathlib import Path
 from datetime import datetime, timedelta, date
 from typing import Any, Optional
 
+from src.utils.season import current_season_id
+
 
 class NHLClient:
     """Client for NHL API endpoints with caching."""
@@ -55,6 +57,7 @@ class NHLClient:
         """
         self.cache_ttl = timedelta(minutes=cache_ttl_minutes)
         self.schedule_cache_ttl = timedelta(hours=24)  # 24-hour cache for schedules
+        self._display_season: Optional[str] = None
         self.CACHE_DIR.mkdir(parents=True, exist_ok=True)
     
     def _get_cache_path(self, url: str) -> Path:
@@ -110,6 +113,31 @@ class NHLClient:
             raise ConnectionError(f"Timeout fetching {url}")
         except httpx.HTTPStatusError as e:
             raise ConnectionError(f"HTTP {e.response.status_code} for {url}")
+    
+    # -------------------------------------------------------------------------
+    # Season Selection
+    # -------------------------------------------------------------------------
+    
+    def display_season(self) -> str:
+        """
+        Season to show on browse pages.
+        
+        This is the current season once at least one team has played a game in
+        it, otherwise the previous season, so pages are not empty in the
+        offseason or preseason. Prediction code should pass the strict current
+        season explicitly instead of relying on this fallback.
+        """
+        if self._display_season is None:
+            current = current_season_id()
+            previous = f"{int(current[:4]) - 1}{current[:4]}"
+            try:
+                url = f"{self.BASE_STATS_API}/team/summary?cayenneExp=seasonId={current}"
+                rows = self._fetch_sync(url).get("data", [])
+            except Exception:
+                rows = []
+            has_games = any((row.get("gamesPlayed") or 0) > 0 for row in rows)
+            self._display_season = current if has_games else previous
+        return self._display_season
     
     # -------------------------------------------------------------------------
     # Schedule Endpoints
@@ -172,27 +200,28 @@ class NHLClient:
     # Team Endpoints
     # -------------------------------------------------------------------------
     
-    def get_team_schedule(self, team: str, season: str = "20252026") -> dict:
+    def get_team_schedule(self, team: str, season: Optional[str] = None) -> dict:
         """
         Get all games for a team in a season.
         
         Args:
             team: Team abbreviation (e.g., "TOR")
-            season: Season ID (e.g., "20252026")
+            season: Season ID (e.g., "20252026"); defaults to display_season()
             
         Returns:
             Team schedule data
         """
+        season = season or self.display_season()
         url = f"{self.BASE_WEB_API}/club-schedule-season/{team}/{season}"
         return self._fetch_sync(url, ttl=self.schedule_cache_ttl)
     
-    def get_season_games(self, team: str, season: str = "20252026") -> list[dict]:
+    def get_season_games(self, team: str, season: Optional[str] = None) -> list[dict]:
         """
         Get processed list of games for a team.
         
         Args:
             team: Team abbreviation
-            season: Season ID
+            season: Season ID; defaults to display_season()
             
         Returns:
             List of game dictionaries with simplified data
@@ -237,26 +266,27 @@ class NHLClient:
         
         return games
     
-    def get_team_stats(self, season: str = "20252026") -> dict:
+    def get_team_stats(self, season: Optional[str] = None) -> dict:
         """
         Get team statistics for a season.
         
         Args:
-            season: Season ID
+            season: Season ID; defaults to display_season()
             
         Returns:
             Team stats data array
         """
+        season = season or self.display_season()
         url = f"{self.BASE_STATS_API}/team/summary?cayenneExp=seasonId={season}"
         return self._fetch_sync(url)
     
-    def get_team_summary(self, team_abbrev: str, season: str = "20252026") -> Optional[dict]:
+    def get_team_summary(self, team_abbrev: str, season: Optional[str] = None) -> Optional[dict]:
         """
         Get stats for a specific team.
         
         Args:
             team_abbrev: Team abbreviation (e.g., "TOR")
-            season: Season ID
+            season: Season ID; defaults to display_season()
             
         Returns:
             Team stats dictionary or None
@@ -266,6 +296,7 @@ class NHLClient:
         if not team_id:
             return None
         
+        season = season or self.display_season()
         stats = self.get_team_stats(season)
         
         for team in stats.get("data", []):
@@ -301,17 +332,18 @@ class NHLClient:
     # Player Endpoints
     # -------------------------------------------------------------------------
     
-    def get_skater_stats(self, season: str = "20252026", limit: int = 100) -> list[dict]:
+    def get_skater_stats(self, season: Optional[str] = None, limit: int = 100) -> list[dict]:
         """
         Get top skaters by points.
         
         Args:
-            season: Season ID
+            season: Season ID; defaults to display_season()
             limit: Number of players to return
             
         Returns:
             List of skater stats
         """
+        season = season or self.display_season()
         url = (
             f"{self.BASE_STATS_API}/skater/summary"
             f"?limit={limit}&cayenneExp=seasonId={season}"
@@ -337,17 +369,18 @@ class NHLClient:
             for p in data.get("data", [])
         ]
     
-    def get_goalie_stats(self, season: str = "20252026", limit: int = 50) -> list[dict]:
+    def get_goalie_stats(self, season: Optional[str] = None, limit: int = 50) -> list[dict]:
         """
         Get goalie statistics.
         
         Args:
-            season: Season ID
+            season: Season ID; defaults to display_season()
             limit: Number of goalies to return
             
         Returns:
             List of goalie stats
         """
+        season = season or self.display_season()
         url = (
             f"{self.BASE_STATS_API}/goalie/summary"
             f"?limit={limit}&cayenneExp=seasonId={season}"
@@ -497,16 +530,20 @@ class NHLClient:
     # Analytics Endpoints (shot quality, Corsi/Fenwick, GSAX)
     # -------------------------------------------------------------------------
 
-    def get_team_analytics(self, season: str = "20252026") -> dict[str, dict]:
+    def get_team_analytics(self, season: Optional[str] = None) -> dict[str, dict]:
         """
         Fetch team-level analytics from the NHL stats REST API.
 
         Includes xGoalsFor, xGoalsAgainst, corsiForPct, fenwickForPct,
         high-danger goals/shots, and scoring-chance data.
 
+        Args:
+            season: Season ID; defaults to display_season()
+
         Returns:
             Dict keyed by team abbreviation with analytics fields.
         """
+        season = season or self.display_season()
         url = (
             f"{self.BASE_STATS_API}/team/analytics"
             f"?cayenneExp=seasonId={season}&limit=40"
@@ -536,7 +573,7 @@ class NHLClient:
         return result
 
     def get_goalie_analytics(
-        self, season: str = "20252026", limit: int = 100
+        self, season: Optional[str] = None, limit: int = 100
     ) -> list[dict]:
         """
         Fetch goalie advanced stats including quality-start metrics.
@@ -545,7 +582,11 @@ class NHLClient:
             name, team, games, gsaa (Goals Saved Above Average, NHL's metric),
             low_danger_saves, medium_danger_saves, high_danger_saves,
             hd_save_pct, quality_starts, really_bad_starts
+
+        Args:
+            season: Season ID; defaults to display_season()
         """
+        season = season or self.display_season()
         url = (
             f"{self.BASE_STATS_API}/goalie/advanced"
             f"?cayenneExp=seasonId={season}&limit={limit}"
@@ -577,13 +618,17 @@ class NHLClient:
         return result
 
     def get_skater_analytics(
-        self, season: str = "20252026", limit: int = 100
+        self, season: Optional[str] = None, limit: int = 100
     ) -> list[dict]:
         """
         Fetch skater per-60 analytics from NHL stats API.
 
         Returns per-60 rates, high-danger shot rates, scoring-chance data.
+
+        Args:
+            season: Season ID; defaults to display_season()
         """
+        season = season or self.display_season()
         url = (
             f"{self.BASE_STATS_API}/skater/summary"
             f"?cayenneExp=seasonId={season}&limit={limit}"
