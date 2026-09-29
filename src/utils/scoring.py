@@ -71,17 +71,8 @@ def parse_schedule(payload: dict) -> dict:
 
 
 def lookup_result(results: dict, date: str, home: str, away: str) -> Optional[dict]:
-    '''Find a final score, tolerating a one-day difference in date boundaries.'''
-    try:
-        base = datetime.strptime(date, '%Y-%m-%d').date()
-    except (TypeError, ValueError):
-        return None
-    for delta in (0, 1, -1):
-        day = (base + timedelta(days=delta)).isoformat()
-        hit = results.get(result_key(day, home, away))
-        if hit:
-            return hit
-    return None
+    '''Find a final score by exact game date and NHL team codes.'''
+    return results.get(result_key(date, home, away))
 
 
 def select_records(rows: list, which: str = 'last') -> list:

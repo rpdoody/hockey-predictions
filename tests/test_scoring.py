@@ -32,11 +32,11 @@ def test_parse_schedule_keeps_only_finished_games():
     }
 
 
-def test_lookup_result_tolerates_one_day_offset():
+def test_lookup_result_requires_the_exact_date():
     results = {'2026-10-09|TOR|MTL': {'home_goals': 1, 'away_goals': 0}}
-    assert lookup_result(results, '2026-10-08', 'TOR', 'MTL') is not None
-    assert lookup_result(results, '2026-10-07', 'TOR', 'MTL') is None
-    assert lookup_result(results, '2026-10-08', 'MTL', 'TOR') is None
+    assert lookup_result(results, '2026-10-09', 'TOR', 'MTL') is not None
+    assert lookup_result(results, '2026-10-08', 'TOR', 'MTL') is None
+    assert lookup_result(results, '2026-10-09', 'MTL', 'TOR') is None
 
 
 def _row(logged_at, **extra):
