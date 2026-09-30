@@ -109,6 +109,8 @@ def closing_prices(history: Optional[dict], start_utc) -> Optional[tuple]:
 
 
 def segment(record: dict) -> str:
+    if record.get('prior_only'):
+        return 'prior_only'
     played = [record.get('home_games_played'), record.get('away_games_played')]
     if any(g is None for g in played):
         return 'unknown'
@@ -229,7 +231,7 @@ def score(rows, results, history_for, min_edge=0.03, which='last') -> dict:
         'overall': _summary(entries),
         'by_segment': {},
     }
-    for name in ('early', 'established', 'unknown'):
+    for name in ('prior_only', 'early', 'established', 'unknown'):
         subset = [e for e in entries if e['segment'] == name]
         if subset:
             report['by_segment'][name] = _summary(subset)
