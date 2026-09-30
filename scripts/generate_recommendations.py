@@ -28,7 +28,7 @@ from src.models.expected_goals import (
     calculate_expected_goals_with_analytics,
 )
 from src.models.win_probability import calculate_win_probability
-from src.utils.pick_log import append_pick_log
+from src.utils.pick_log import append_pick_log, source_version
 from src.utils.season import current_season_id, to_eastern
 
 OUT_PATH = ROOT / "data_files" / "recommendations.json"
@@ -37,6 +37,11 @@ MIN_EDGE = 0.03           # only include picks with ≥3 % edge
 LOOKAHEAD_DAYS = 7
 MIN_GAMES_PLAYED = 20     # the model was only evaluated once both teams had played this many
 SHRINK_KEEP = 0.5         # share of the model's disagreement with the market that is kept
+MODEL_VERSION = source_version((
+    ROOT / "src" / "models" / "expected_goals.py",
+    ROOT / "src" / "models" / "win_probability.py",
+    Path(__file__).resolve(),
+))
 
 
 def _american_to_prob(odds: int | float | str | None) -> float | None:
@@ -239,6 +244,7 @@ def main() -> None:
             "away_team":          away_abbr,
             "season_id":          season_id,
             "model_source":       model_source,
+            "model_version":      MODEL_VERSION,
             "prior_only":         prior_only,
             "home_games_played":  current_gp[0],
             "away_games_played":  current_gp[1],
