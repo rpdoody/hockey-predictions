@@ -1,0 +1,19 @@
+{
+  "game_id": "401891818",
+  "home_team": "NYI",
+  "away_team": "NJD",
+  "start_time": "2026-10-03T23:30Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-09-30T01:47:21+00:00",
+      "provider": "DraftKings",
+      "home_ml": -118,
+      "away_ml": -102,
+      "total": 5.5,
+      "over_odds": -130,
+      "under_odds": 110,
+      "home_pl_odds": 195,
+      "away_pl_odds": -238
+    }
+  ]
+}

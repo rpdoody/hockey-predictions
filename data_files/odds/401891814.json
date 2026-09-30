@@ -1,0 +1,19 @@
+{
+  "game_id": "401891814",
+  "home_team": "MIN",
+  "away_team": "BOS",
+  "start_time": "2026-10-04T00:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-09-30T01:47:21+00:00",
+      "provider": "DraftKings",
+      "home_ml": -162,
+      "away_ml": 136,
+      "total": 6.5,
+      "over_odds": 120,
+      "under_odds": -142,
+      "home_pl_odds": 160,
+      "away_pl_odds": -192
+    }
+  ]
+}
