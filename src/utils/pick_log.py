@@ -1,10 +1,20 @@
 """Append-only log of model predictions for later, honest evaluation."""
+import hashlib
 import json
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable, List, Optional
 
 LOG_DIR = Path("data_files/pick_log")
+
+
+def source_version(paths: Iterable[Path]) -> str:
+    """Short hash of source files, so logged picks show which logic made them."""
+    digest = hashlib.sha256()
+    for path in sorted(Path(p) for p in paths):
+        digest.update(path.name.encode("utf-8"))
+        digest.update(path.read_bytes().replace(b"\r\n", b"\n"))
+    return digest.hexdigest()[:10]
 
 
 def append_pick_log(
