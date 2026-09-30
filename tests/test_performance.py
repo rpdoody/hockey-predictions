@@ -97,8 +97,8 @@ def test_picks_for_date_grades_each_pick():
         _entry(home='EDM', away='VAN'),
     ]
     scores = {
-        DAY + '|MTL|TOR': {'away_goals': 1, 'home_goals': 2},
-        DAY + '|NYR|BOS': {'away_goals': 1, 'home_goals': 2},
+        DAY + '|TOR|MTL': {'away_goals': 1, 'home_goals': 2},
+        DAY + '|BOS|NYR': {'away_goals': 1, 'home_goals': 2},
     }
     rows = {r['Game']: r for r in picks_for_date(entries, scores, DAY)}
     tor = rows['MTL @ TOR']

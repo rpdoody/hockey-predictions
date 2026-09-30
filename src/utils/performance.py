@@ -33,7 +33,7 @@ def load_scorecard(path: Path = SCORECARD_PATH) -> Optional[dict]:
 
 
 def load_final_scores(path: Path = FINAL_SCORES_PATH) -> dict:
-    '''Final scores keyed by game_date|AWAY|HOME, or an empty dict.'''
+    '''Final scores keyed by game_date|HOME|AWAY, or an empty dict.'''
     data = _read_json(path)
     return data if isinstance(data, dict) else {}
 
@@ -127,7 +127,7 @@ def picks_for_date(entries: List[dict], scores: dict, game_date: str) -> List[di
             latest[key] = entry
     ordered = sorted(latest.items(), key=lambda item: item[1].get('start_utc') or '')
     return [
-        _pick_row(entry, scores.get('{}|{}|{}'.format(game_date, away, home)))
+        _pick_row(entry, scores.get('{}|{}|{}'.format(game_date, home, away)))
         for (away, home), entry in ordered
     ]
 
