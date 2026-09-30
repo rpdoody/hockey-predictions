@@ -39,5 +39,7 @@ jobs:
             exit 0
           fi
           git commit -m "Update pick scorecard [skip ci]"
-          git pull --rebase --autostash origin main
+          # Both result files are regenerated in full each run, so on a conflict
+          # keep this run's version (during a rebase, -X theirs is the commit being replayed).
+          git pull --rebase --autostash -X theirs origin main
           git push
