@@ -18,5 +18,17 @@
   "2026-09-29|VGK|CHI": {
     "away_goals": 2,
     "home_goals": 5
+  },
+  "2026-09-30|COL|LAK": {
+    "away_goals": 4,
+    "home_goals": 8
+  },
+  "2026-09-30|PHI|PIT": {
+    "away_goals": 7,
+    "home_goals": 0
+  },
+  "2026-09-30|TOR|NYI": {
+    "away_goals": 1,
+    "home_goals": 2
   }
 }
