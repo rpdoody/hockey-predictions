@@ -1,0 +1,19 @@
+{
+  "game_id": "401892433",
+  "home_team": "VGK",
+  "away_team": "ANA",
+  "start_time": "2026-10-03T02:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-10-01T21:31:34+00:00",
+      "provider": "DraftKings",
+      "home_ml": -185,
+      "away_ml": 154,
+      "total": 6.5,
+      "over_odds": -110,
+      "under_odds": -110,
+      "home_pl_odds": 130,
+      "away_pl_odds": -155
+    }
+  ]
+}
