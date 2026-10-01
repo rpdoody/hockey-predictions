@@ -1,0 +1,19 @@
+{
+  "game_id": "401891824",
+  "home_team": "SEA",
+  "away_team": "CGY",
+  "start_time": "2026-10-05T00:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-10-01T01:43:44+00:00",
+      "provider": "Draft Kings",
+      "home_ml": -135,
+      "away_ml": 114,
+      "total": 5.5,
+      "over_odds": -110,
+      "under_odds": -110,
+      "home_pl_odds": 180,
+      "away_pl_odds": -218
+    }
+  ]
+}
