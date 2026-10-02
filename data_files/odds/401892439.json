@@ -1,0 +1,19 @@
+{
+  "game_id": "401892439",
+  "home_team": "COL",
+  "away_team": "STL",
+  "start_time": "2026-10-04T01:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-10-02T21:07:00+00:00",
+      "provider": "DraftKings",
+      "home_ml": -298,
+      "away_ml": 240,
+      "total": 6.5,
+      "over_odds": 114,
+      "under_odds": -135,
+      "home_pl_odds": -120,
+      "away_pl_odds": 100
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "game_id": "401892440",
+  "home_team": "VAN",
+  "away_team": "CGY",
+  "start_time": "2026-10-04T02:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-10-02T21:07:00+00:00",
+      "provider": "DraftKings",
+      "home_ml": -110,
+      "away_ml": -110,
+      "total": 6.5,
+      "over_odds": 105,
+      "under_odds": -125,
+      "home_pl_odds": 215,
+      "away_pl_odds": -265
+    }
+  ]
+}
