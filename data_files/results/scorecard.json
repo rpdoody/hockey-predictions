@@ -1,9 +1,9 @@
 {
   "which": "last",
   "min_edge": 0.03,
-  "games_logged": 64,
+  "games_logged": 68,
   "games_scored": 15,
-  "games_pending": 49,
+  "games_pending": 53,
   "overall": {
     "probabilities": {
       "n": 15,
@@ -60,5 +60,5 @@
       }
     }
   },
-  "generated_at": "2026-10-02T11:42:10+00:00"
+  "generated_at": "2026-10-02T16:20:27+00:00"
 }
