@@ -30,5 +30,37 @@
   "2026-09-30|TOR|NYI": {
     "away_goals": 1,
     "home_goals": 2
+  },
+  "2026-10-01|CBJ|BUF": {
+    "away_goals": 3,
+    "home_goals": 6
+  },
+  "2026-10-01|CGY|SEA": {
+    "away_goals": 6,
+    "home_goals": 1
+  },
+  "2026-10-01|NJD|PHI": {
+    "away_goals": 2,
+    "home_goals": 3
+  },
+  "2026-10-01|NSH|MIN": {
+    "away_goals": 3,
+    "home_goals": 1
+  },
+  "2026-10-01|NYR|TBL": {
+    "away_goals": 1,
+    "home_goals": 5
+  },
+  "2026-10-01|SJS|FLA": {
+    "away_goals": 3,
+    "home_goals": 4
+  },
+  "2026-10-01|UTA|CHI": {
+    "away_goals": 0,
+    "home_goals": 6
+  },
+  "2026-10-01|VAN|EDM": {
+    "away_goals": 9,
+    "home_goals": 7
   }
 }
