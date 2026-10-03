@@ -62,5 +62,25 @@
   "2026-10-01|VAN|EDM": {
     "away_goals": 9,
     "home_goals": 7
+  },
+  "2026-10-02|CAR|WSH": {
+    "away_goals": 5,
+    "home_goals": 2
+  },
+  "2026-10-02|DAL|STL": {
+    "away_goals": 4,
+    "home_goals": 0
+  },
+  "2026-10-02|DET|NYR": {
+    "away_goals": 2,
+    "home_goals": 0
+  },
+  "2026-10-02|VGK|ANA": {
+    "away_goals": 4,
+    "home_goals": 3
+  },
+  "2026-10-02|WPG|BOS": {
+    "away_goals": 4,
+    "home_goals": 3
   }
 }
