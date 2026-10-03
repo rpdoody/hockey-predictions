@@ -1,0 +1,19 @@
+{
+  "game_id": "401892442",
+  "home_team": "DET",
+  "away_team": "WPG",
+  "start_time": "2026-10-04T17:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-10-03T19:37:31+00:00",
+      "provider": "DraftKings",
+      "home_ml": -115,
+      "away_ml": -105,
+      "total": 5.5,
+      "over_odds": -125,
+      "under_odds": 105,
+      "home_pl_odds": 210,
+      "away_pl_odds": -258
+    }
+  ]
+}
