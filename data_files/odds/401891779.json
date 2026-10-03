@@ -1,0 +1,19 @@
+{
+  "game_id": "401891779",
+  "home_team": "CHI",
+  "away_team": "STL",
+  "start_time": "2026-10-07T00:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-10-03T01:36:41+00:00",
+      "provider": "Draft Kings",
+      "home_ml": -105,
+      "away_ml": -115,
+      "total": 5.5,
+      "over_odds": 100,
+      "under_odds": -120,
+      "home_pl_odds": -250,
+      "away_pl_odds": 205
+    }
+  ]
+}

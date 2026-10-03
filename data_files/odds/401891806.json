@@ -1,0 +1,19 @@
+{
+  "game_id": "401891806",
+  "home_team": "LAK",
+  "away_team": "FLA",
+  "start_time": "2026-10-07T02:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-10-03T01:36:41+00:00",
+      "provider": "Draft Kings",
+      "home_ml": 105,
+      "away_ml": -125,
+      "total": 5.5,
+      "over_odds": -130,
+      "under_odds": 110,
+      "home_pl_odds": -238,
+      "away_pl_odds": 195
+    }
+  ]
+}

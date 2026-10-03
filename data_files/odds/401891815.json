@@ -1,0 +1,19 @@
+{
+  "game_id": "401891815",
+  "home_team": "MTL",
+  "away_team": "CAR",
+  "start_time": "2026-10-06T23:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-10-03T01:36:41+00:00",
+      "provider": "Draft Kings",
+      "home_ml": -102,
+      "away_ml": -118,
+      "total": 6.5,
+      "over_odds": 100,
+      "under_odds": -120,
+      "home_pl_odds": -245,
+      "away_pl_odds": 200
+    }
+  ]
+}
