@@ -1,0 +1,19 @@
+{
+  "game_id": "401891830",
+  "home_team": "WSH",
+  "away_team": "PIT",
+  "start_time": "2026-10-07T23:30Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-10-04T02:16:50+00:00",
+      "provider": "DraftKings",
+      "home_ml": -170,
+      "away_ml": 142,
+      "total": 6.5,
+      "over_odds": 114,
+      "under_odds": -135,
+      "home_pl_odds": 145,
+      "away_pl_odds": -175
+    }
+  ]
+}
