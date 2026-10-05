@@ -1,0 +1,19 @@
+{
+  "game_id": "401892452",
+  "home_team": "NYR",
+  "away_team": "NYI",
+  "start_time": "2026-10-06T23:30Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-10-05T23:01:52+00:00",
+      "provider": "DraftKings",
+      "home_ml": -148,
+      "away_ml": 124,
+      "total": 5.5,
+      "over_odds": -120,
+      "under_odds": 100,
+      "home_pl_odds": 170,
+      "away_pl_odds": -205
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "game_id": "401892454",
+  "home_team": "SEA",
+  "away_team": "VGK",
+  "start_time": "2026-10-07T01:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-10-05T23:01:52+00:00",
+      "provider": "DraftKings",
+      "home_ml": 142,
+      "away_ml": -170,
+      "total": 6.5,
+      "over_odds": 110,
+      "under_odds": -130,
+      "home_pl_odds": -175,
+      "away_pl_odds": 145
+    }
+  ]
+}
