@@ -134,5 +134,25 @@
   "2026-10-03|VAN|CGY": {
     "away_goals": 1,
     "home_goals": 4
+  },
+  "2026-10-04|ANA|FLA": {
+    "away_goals": 2,
+    "home_goals": 3
+  },
+  "2026-10-04|DET|WPG": {
+    "away_goals": 3,
+    "home_goals": 2
+  },
+  "2026-10-04|NYR|UTA": {
+    "away_goals": 2,
+    "home_goals": 4
+  },
+  "2026-10-04|SEA|CGY": {
+    "away_goals": 1,
+    "home_goals": 6
+  },
+  "2026-10-04|VAN|VGK": {
+    "away_goals": 3,
+    "home_goals": 2
   }
 }

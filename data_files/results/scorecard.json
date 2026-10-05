@@ -1,64 +1,64 @@
 {
   "which": "last",
   "min_edge": 0.03,
-  "games_logged": 85,
-  "games_scored": 33,
-  "games_pending": 52,
+  "games_logged": 88,
+  "games_scored": 38,
+  "games_pending": 50,
   "overall": {
     "probabilities": {
-      "n": 33,
+      "n": 38,
       "p_raw": {
-        "brier": 0.2366,
-        "log_loss": 0.6659
+        "brier": 0.2341,
+        "log_loss": 0.6609
       },
       "p_used": {
-        "brier": 0.238,
-        "log_loss": 0.6686
+        "brier": 0.2346,
+        "log_loss": 0.6618
       },
       "p_market": {
-        "brier": 0.2409,
-        "log_loss": 0.6743
+        "brier": 0.2368,
+        "log_loss": 0.6659
       }
     },
     "bets": {
-      "n": 2,
+      "n": 3,
       "wins": 2,
-      "hit_rate": 1.0,
-      "units": 2.38,
-      "roi": 1.19,
-      "avg_edge": 0.0334,
-      "clv_n": 2,
-      "avg_clv": 0.0
+      "hit_rate": 0.6667,
+      "units": 1.38,
+      "roi": 0.46,
+      "avg_edge": 0.0333,
+      "clv_n": 3,
+      "avg_clv": -0.011
     }
   },
   "by_segment": {
     "prior_only": {
       "probabilities": {
-        "n": 33,
+        "n": 38,
         "p_raw": {
-          "brier": 0.2366,
-          "log_loss": 0.6659
+          "brier": 0.2341,
+          "log_loss": 0.6609
         },
         "p_used": {
-          "brier": 0.238,
-          "log_loss": 0.6686
+          "brier": 0.2346,
+          "log_loss": 0.6618
         },
         "p_market": {
-          "brier": 0.2409,
-          "log_loss": 0.6743
+          "brier": 0.2368,
+          "log_loss": 0.6659
         }
       },
       "bets": {
-        "n": 2,
+        "n": 3,
         "wins": 2,
-        "hit_rate": 1.0,
-        "units": 2.38,
-        "roi": 1.19,
-        "avg_edge": 0.0334,
-        "clv_n": 2,
-        "avg_clv": 0.0
+        "hit_rate": 0.6667,
+        "units": 1.38,
+        "roi": 0.46,
+        "avg_edge": 0.0333,
+        "clv_n": 3,
+        "avg_clv": -0.011
       }
     }
   },
-  "generated_at": "2026-10-04T15:28:24+00:00"
+  "generated_at": "2026-10-05T20:45:48+00:00"
 }
