@@ -7,7 +7,8 @@ from typing import Dict, List, Optional
 ODDS_DIR = Path('data_files/odds')
 
 _PRICE_FIELDS = (
-    'home_ml', 'away_ml', 'total', 'over_odds', 'under_odds', 'home_pl_odds', 'away_pl_odds'
+    'home_ml', 'away_ml', 'total', 'over_odds', 'under_odds', 'home_pl_odds', 'away_pl_odds',
+    'home_pl_line',
 )
 
 
@@ -28,8 +29,12 @@ def save_odds_snapshot(
     away_pl_odds: Optional[int] = None,
     start_time: Optional[str] = None,
     provider: Optional[str] = None,
+    home_pl_line: Optional[float] = None,
 ) -> bool:
     '''Append an odds snapshot; markets that are not offered are stored as null.
+
+    home_pl_line is the home team's puck line number (for example -1.5 when the
+    home team is the favourite); the away line is its negative.
 
     Returns False (and writes nothing) when the prices match the last snapshot.
     '''
@@ -59,6 +64,7 @@ def save_odds_snapshot(
         'under_odds': under_odds,
         'home_pl_odds': home_pl_odds,
         'away_pl_odds': away_pl_odds,
+        'home_pl_line': home_pl_line,
     }
     if data['snapshots']:
         last = data['snapshots'][-1]

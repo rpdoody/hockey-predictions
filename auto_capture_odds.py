@@ -70,6 +70,7 @@ def build_snapshot(game: dict) -> Optional[dict]:
         'under_odds': under_odds,
         'home_pl_odds': parse_price(home_pl.get('odds')),
         'away_pl_odds': parse_price(away_pl.get('odds')),
+        'home_pl_line': parse_line(home_pl.get('line')),
         'start_time': game.get('date'),
         'provider': selected.get('provider'),
     }
