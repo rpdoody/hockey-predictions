@@ -66,7 +66,11 @@ def parse_schedule(payload: dict) -> dict:
             if home_goals is None or away_goals is None or home_goals == away_goals:
                 continue
             key = result_key(day_date, home.get('abbrev'), away.get('abbrev'))
-            results[key] = {'home_goals': home_goals, 'away_goals': away_goals}
+            entry = {'home_goals': home_goals, 'away_goals': away_goals}
+            period_type = (game.get('gameOutcome') or {}).get('lastPeriodType')
+            if period_type in ('REG', 'OT', 'SO'):
+                entry['period_type'] = period_type
+            results[key] = entry
     return results
 
 
