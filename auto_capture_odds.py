@@ -16,10 +16,15 @@ def _stamp() -> str:
     return datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')
 
 
+def _provider_key(name) -> str:
+    '''Lowercase letters and digits only, so 'Draft Kings' matches 'DraftKings'.'''
+    return ''.join(ch for ch in str(name or '').lower() if ch.isalnum())
+
+
 def select_provider(odds_list: list) -> Optional[dict]:
-    '''Prefer DraftKings, otherwise the first provider listed.'''
+    '''Prefer DraftKings (any spacing or case), otherwise the first provider listed.'''
     for provider in odds_list:
-        if provider.get('provider') == 'DraftKings':
+        if _provider_key(provider.get('provider')) == 'draftkings':
             return provider
     return odds_list[0] if odds_list else None
 
