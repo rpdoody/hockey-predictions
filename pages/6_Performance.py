@@ -1,4 +1,4 @@
-'''Model performance: daily picks, plus logged predictions scored against the market.'''
+'''Model performance: daily picks, running dollar total, and logged predictions scored against the market.'''
 import sys
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -10,25 +10,58 @@ import streamlit as st
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from footer import add_betting_oracle_footer
 from src.utils.performance import (
-    day_summary, load_final_scores, load_pick_log, load_scorecard,
-    picks_for_date, segment_rows, verdict,
+    STAKE, daily_summary, day_summary, ledger_totals, load_final_scores, load_pick_log,
+    load_scorecard, money, pick_ledger, picks_for_date, segment_rows, verdict,
 )
 
 st.title('📈 Performance Tracker')
 
+entries = load_pick_log()
+scores = load_final_scores()
+
 st.subheader('Daily picks')
 yesterday = (datetime.now(ZoneInfo('America/New_York')) - timedelta(days=1)).date()
 chosen = st.date_input('Game date', value=yesterday)
-rows = picks_for_date(load_pick_log(), load_final_scores(), chosen.isoformat())
+rows = picks_for_date(entries, scores, chosen.isoformat())
 st.write(day_summary(rows))
 if rows:
     st.dataframe(pd.DataFrame(rows), width='stretch', hide_index=True)
 st.caption(
     'The pick is the side the blended model favors, using the last prediction logged before '
-    'the game started. Edge is the model probability minus the market probability with the '
-    'margin removed. Win/loss is on the final score, so it works from the first game, but a '
-    'few games say very little about model quality.'
+    'the game started. Odds are the moneyline logged for that side at the same time. Edge is the '
+    'model probability minus the market probability with the margin removed. Win/loss is on the '
+    'final score, so it works from the first game, but a few games say very little about model quality.'
 )
+
+st.divider()
+st.subheader('Running total at ${:.0f} per pick'.format(STAKE))
+ledger = pick_ledger(entries, scores)
+if not ledger:
+    st.info('No graded picks yet. This section fills in after the first scored games.')
+else:
+    totals = ledger_totals(ledger)
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric('Record', '{}-{}'.format(totals['wins'], totals['losses']))
+    col2.metric('Profit', money(totals['profit']))
+    col3.metric('Staked', '${:,.0f}'.format(totals['staked']))
+    col4.metric('ROI', 'n/a' if totals['roi'] is None else '{:+.1%}'.format(totals['roi']))
+
+    daily = daily_summary(ledger)
+    st.line_chart(pd.DataFrame(daily).set_index('Date')[['Running total']])
+    table = pd.DataFrame(daily)
+    table['Day P/L'] = table['Day P/L'].map(money)
+    table['Running total'] = table['Running total'].map(money)
+    st.dataframe(table.iloc[::-1], width='stretch', hide_index=True)
+
+    note = (
+        'A flat ${:.0f} on every predicted winner, at the moneyline logged before the game '
+        'started, whether the pick was the favorite or the underdog. This is every pick, not only '
+        'the edge-filtered simulated bets in the table below.'
+    ).format(STAKE)
+    if totals['unpriced']:
+        note += ' {} graded pick(s) had no logged moneyline: they count in the record but not in the dollars.'.format(
+            totals['unpriced'])
+    st.caption(note)
 
 st.divider()
 st.subheader('Is the model beating the market?')

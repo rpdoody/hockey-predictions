@@ -10,6 +10,8 @@ FINAL_SCORES_PATH = ROOT / 'data_files' / 'results' / 'final_scores.json'
 PICK_LOG_DIR = ROOT / 'data_files' / 'pick_log'
 MIN_GAMES = 100
 EARLY_GAMES = 20
+STAKE = 10.0
+PL_LABEL = '${:.0f} P/L'.format(STAKE)
 WIN, LOSS, PENDING, NO_PICK = '✅ Win', '❌ Loss', '⏳ Pending', 'No pick'
 SEGMENT_LABELS = {
     'overall': 'All games',
@@ -64,6 +66,29 @@ def _log_loss(metrics) -> str:
     return 'n/a' if not metrics else format(metrics['log_loss'], '.4f')
 
 
+def parse_american(value) -> Optional[int]:
+    '''American moneyline as an int, or None when it is missing or unreadable.'''
+    if value is None:
+        return None
+    text = str(value).strip().upper()
+    if text in ('EVEN', 'EV', 'PK'):
+        return 100
+    try:
+        odds = int(float(text.replace('+', '')))
+    except ValueError:
+        return None
+    return odds if abs(odds) >= 100 else None
+
+
+def win_profit(odds: int, stake: float = STAKE) -> float:
+    '''Profit on a winning flat stake at American odds.'''
+    return stake * odds / 100 if odds > 0 else stake * 100 / -odds
+
+
+def money(value: float) -> str:
+    return '{}${:,.2f}'.format('-' if value < 0 else '+', abs(value))
+
+
 def _parse_time(text):
     try:
         return datetime.fromisoformat(text.replace('Z', '+00:00'))
@@ -85,10 +110,23 @@ def _stage(entry: dict) -> str:
     return SEGMENT_LABELS['early' if min(played) < EARLY_GAMES else 'established']
 
 
+def _latest_entries(entries: List[dict], game_date: str) -> list:
+    '''(away, home, entry) per game on game_date, last entry logged before the start.'''
+    latest = {}
+    for entry in entries:
+        if entry.get('game_date') != game_date or not _logged_before_start(entry):
+            continue
+        key = (entry['away_team'], entry['home_team'])
+        if key not in latest or entry.get('logged_at', '') > latest[key].get('logged_at', ''):
+            latest[key] = entry
+    ordered = sorted(latest.items(), key=lambda item: item[1].get('start_utc') or '')
+    return [(away, home, entry) for (away, home), entry in ordered]
+
+
 def _pick_row(entry: dict, score: Optional[dict]) -> dict:
     home, away = entry['home_team'], entry['away_team']
     p_home, fair_home = entry.get('home_win_prob_used'), entry.get('fair_home_prob')
-    pick = model_p = market_p = edge = None
+    pick = model_p = market_p = edge = pick_home = None
     result = NO_PICK
     if p_home is not None:
         pick_home = p_home >= 0.5
@@ -100,6 +138,12 @@ def _pick_row(entry: dict, score: Optional[dict]) -> dict:
         result = PENDING
         if score is not None:
             result = WIN if (score['home_goals'] > score['away_goals']) == pick_home else LOSS
+    odds = None
+    if pick_home is not None:
+        odds = parse_american(entry.get('home_ml' if pick_home else 'away_ml'))
+    profit = None
+    if odds is not None and result in (WIN, LOSS):
+        profit = win_profit(odds) if result == WIN else -STAKE
     final = ''
     if score is not None:
         final = '{} {} - {} {}'.format(away, score['away_goals'], home, score['home_goals'])
@@ -107,10 +151,12 @@ def _pick_row(entry: dict, score: Optional[dict]) -> dict:
         'Time': entry.get('game_time', ''),
         'Game': '{} @ {}'.format(away, home),
         'Pick': pick or 'n/a',
+        'Odds': 'n/a' if odds is None else format(odds, '+d'),
         'Model win %': _text(model_p, '.1%'),
         'Market win %': _text(market_p, '.1%'),
         'Edge': _text(edge, '+.1%'),
         'Result': result,
+        PL_LABEL: '' if profit is None else money(profit),
         'Final score': final,
         'Stage': _stage(entry),
     }
@@ -118,18 +164,69 @@ def _pick_row(entry: dict, score: Optional[dict]) -> dict:
 
 def picks_for_date(entries: List[dict], scores: dict, game_date: str) -> List[dict]:
     '''One row per game on game_date, using the last entry logged before the start.'''
-    latest = {}
-    for entry in entries:
-        if entry.get('game_date') != game_date or not _logged_before_start(entry):
-            continue
-        key = (entry['away_team'], entry['home_team'])
-        if key not in latest or entry.get('logged_at', '') > latest[key].get('logged_at', ''):
-            latest[key] = entry
-    ordered = sorted(latest.items(), key=lambda item: item[1].get('start_utc') or '')
     return [
         _pick_row(entry, scores.get('{}|{}|{}'.format(game_date, home, away)))
-        for (away, home), entry in ordered
+        for away, home, entry in _latest_entries(entries, game_date)
     ]
+
+
+def pick_ledger(entries: List[dict], scores: dict, stake: float = STAKE) -> List[dict]:
+    '''Every graded pick, oldest first, with flat-stake profit and a running total.'''
+    rows, total = [], 0.0
+    for game_date in sorted({e.get('game_date') for e in entries if e.get('game_date')}):
+        for away, home, entry in _latest_entries(entries, game_date):
+            score = scores.get('{}|{}|{}'.format(game_date, home, away))
+            p_home = entry.get('home_win_prob_used')
+            if score is None or p_home is None:
+                continue
+            pick_home = p_home >= 0.5
+            won = (score['home_goals'] > score['away_goals']) == pick_home
+            odds = parse_american(entry.get('home_ml' if pick_home else 'away_ml'))
+            profit = None
+            if odds is not None:
+                profit = win_profit(odds, stake) if won else -stake
+                total += profit
+            rows.append({
+                'date': game_date,
+                'game': '{} @ {}'.format(away, home),
+                'pick': home if pick_home else away,
+                'odds': odds,
+                'won': won,
+                'profit': profit,
+                'running_total': total,
+            })
+    return rows
+
+
+def daily_summary(ledger: List[dict]) -> List[dict]:
+    '''Wins, losses, profit and running total for each day in the ledger.'''
+    days = {}
+    for row in ledger:
+        day = days.setdefault(row['date'], {'Date': row['date'], 'Wins': 0, 'Losses': 0, 'Day P/L': 0.0})
+        day['Wins' if row['won'] else 'Losses'] += 1
+        day['Day P/L'] += row['profit'] or 0.0
+    out, total = [], 0.0
+    for date in sorted(days):
+        day = days[date]
+        total += day['Day P/L']
+        out.append({**day, 'Running total': total})
+    return out
+
+
+def ledger_totals(ledger: List[dict], stake: float = STAKE) -> dict:
+    '''Record, profit, amount staked and ROI over priced picks.'''
+    wins = sum(1 for r in ledger if r['won'])
+    priced = [r for r in ledger if r['profit'] is not None]
+    profit = sum(r['profit'] for r in priced)
+    staked = stake * len(priced)
+    return {
+        'wins': wins,
+        'losses': len(ledger) - wins,
+        'profit': profit,
+        'staked': staked,
+        'roi': profit / staked if staked else None,
+        'unpriced': len(ledger) - len(priced),
+    }
 
 
 def day_summary(rows: List[dict]) -> str:
