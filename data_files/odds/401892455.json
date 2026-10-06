@@ -1,0 +1,20 @@
+{
+  "game_id": "401892455",
+  "home_team": "WPG",
+  "away_team": "COL",
+  "start_time": "2026-10-07T23:30Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-10-06T17:40:25+00:00",
+      "provider": "Draft Kings",
+      "home_ml": 160,
+      "away_ml": -192,
+      "total": 6.5,
+      "over_odds": -105,
+      "under_odds": -115,
+      "home_pl_odds": -162,
+      "away_pl_odds": 136,
+      "home_pl_line": 1.5
+    }
+  ]
+}
