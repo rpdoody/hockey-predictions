@@ -1,0 +1,20 @@
+{
+  "game_id": "401892463",
+  "home_team": "CGY",
+  "away_team": "COL",
+  "start_time": "2026-10-09T01:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-10-07T21:43:20+00:00",
+      "provider": "Draft Kings",
+      "home_ml": 195,
+      "away_ml": -238,
+      "total": 6.5,
+      "over_odds": 100,
+      "under_odds": -120,
+      "home_pl_odds": -118,
+      "away_pl_odds": -102,
+      "home_pl_line": 1.5
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "game_id": "401892460",
+  "home_team": "TBL",
+  "away_team": "MIN",
+  "start_time": "2026-10-08T23:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-10-07T21:43:20+00:00",
+      "provider": "Draft Kings",
+      "home_ml": -148,
+      "away_ml": 124,
+      "total": 5.5,
+      "over_odds": -130,
+      "under_odds": 110,
+      "home_pl_odds": 154,
+      "away_pl_odds": -185,
+      "home_pl_line": -1.5
+    }
+  ]
+}

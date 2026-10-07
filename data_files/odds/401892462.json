@@ -1,0 +1,20 @@
+{
+  "game_id": "401892462",
+  "home_team": "NYI",
+  "away_team": "CHI",
+  "start_time": "2026-10-08T23:30Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-10-07T21:43:20+00:00",
+      "provider": "Draft Kings",
+      "home_ml": -185,
+      "away_ml": 154,
+      "total": 5.5,
+      "over_odds": -130,
+      "under_odds": 110,
+      "home_pl_odds": 124,
+      "away_pl_odds": -148,
+      "home_pl_line": -1.5
+    }
+  ]
+}
