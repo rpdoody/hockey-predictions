@@ -258,5 +258,20 @@
     "away_goals": 4,
     "home_goals": 5,
     "period_type": "OT"
+  },
+  "2026-10-07|ANA|EDM": {
+    "away_goals": 5,
+    "home_goals": 2,
+    "period_type": "REG"
+  },
+  "2026-10-07|WPG|COL": {
+    "away_goals": 2,
+    "home_goals": 3,
+    "period_type": "REG"
+  },
+  "2026-10-07|WSH|PIT": {
+    "away_goals": 3,
+    "home_goals": 5,
+    "period_type": "REG"
   }
 }
