@@ -1,0 +1,20 @@
+{
+  "game_id": "401892473",
+  "home_team": "MTL",
+  "away_team": "DET",
+  "start_time": "2026-10-10T23:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-10-09T21:25:00+00:00",
+      "provider": "Draft Kings",
+      "home_ml": -218,
+      "away_ml": 180,
+      "total": 6.5,
+      "over_odds": 105,
+      "under_odds": -125,
+      "home_pl_odds": 114,
+      "away_pl_odds": -135,
+      "home_pl_line": -1.5
+    }
+  ]
+}

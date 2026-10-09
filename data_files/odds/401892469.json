@@ -1,0 +1,20 @@
+{
+  "game_id": "401892469",
+  "home_team": "BOS",
+  "away_team": "PHI",
+  "start_time": "2026-10-10T17:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-10-09T21:25:00+00:00",
+      "provider": "Draft Kings",
+      "home_ml": -135,
+      "away_ml": 114,
+      "total": 5.5,
+      "over_odds": -120,
+      "under_odds": 100,
+      "home_pl_odds": 195,
+      "away_pl_odds": -238,
+      "home_pl_line": -1.5
+    }
+  ]
+}

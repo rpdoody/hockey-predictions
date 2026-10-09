@@ -1,0 +1,20 @@
+{
+  "game_id": "401892475",
+  "home_team": "PIT",
+  "away_team": "DAL",
+  "start_time": "2026-10-10T23:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-10-09T21:25:00+00:00",
+      "provider": "Draft Kings",
+      "home_ml": 130,
+      "away_ml": -155,
+      "total": 6.5,
+      "over_odds": -105,
+      "under_odds": -115,
+      "home_pl_odds": -185,
+      "away_pl_odds": 154,
+      "home_pl_line": 1.5
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "game_id": "401892480",
+  "home_team": "CGY",
+  "away_team": "ANA",
+  "start_time": "2026-10-11T02:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-10-09T21:25:00+00:00",
+      "provider": "Draft Kings",
+      "home_ml": 105,
+      "away_ml": -125,
+      "total": 6.5,
+      "over_odds": 102,
+      "under_odds": -122,
+      "home_pl_odds": -230,
+      "away_pl_odds": 190,
+      "home_pl_line": 1.5
+    }
+  ]
+}

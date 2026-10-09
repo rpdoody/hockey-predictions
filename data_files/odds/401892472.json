@@ -1,0 +1,20 @@
+{
+  "game_id": "401892472",
+  "home_team": "BUF",
+  "away_team": "UTA",
+  "start_time": "2026-10-10T23:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-10-09T21:25:00+00:00",
+      "provider": "Draft Kings",
+      "home_ml": -112,
+      "away_ml": -108,
+      "total": 6.5,
+      "over_odds": 102,
+      "under_odds": -122,
+      "home_pl_odds": -290,
+      "away_pl_odds": 235,
+      "home_pl_line": 1.5
+    }
+  ]
+}
