@@ -1,10 +1,25 @@
 {
   "meta": {
     "sport": "NHL",
-    "generated_at": "2026-10-09T13:54:27.504086+00:00",
+    "generated_at": "2026-10-10T13:00:34.182479+00:00",
     "model_version": "1.0.0",
-    "season": "2026",
-    "notes": "No NHL picks for 2026-10-09"
+    "season": "2026"
   },
-  "bets": []
+  "bets": [
+    {
+      "game_date": "2026-10-10",
+      "game_time": "3:30 PM ET",
+      "game": "VAN @ NJD",
+      "home_team": "NJD",
+      "away_team": "VAN",
+      "bet_type": "Moneyline",
+      "pick": "VAN",
+      "confidence": 0.3531,
+      "edge": 0.0501,
+      "tier": "Strong",
+      "odds": "+230",
+      "line": null,
+      "notes": "Early blend (last season + this season)"
+    }
+  ]
 }
