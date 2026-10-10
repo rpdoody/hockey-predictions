@@ -323,5 +323,25 @@
     "away_goals": 3,
     "home_goals": 4,
     "period_type": "SO"
+  },
+  "2026-10-09|CBJ|PIT": {
+    "away_goals": 2,
+    "home_goals": 3,
+    "period_type": "SO"
+  },
+  "2026-10-09|DET|SEA": {
+    "away_goals": 6,
+    "home_goals": 3,
+    "period_type": "REG"
+  },
+  "2026-10-09|WPG|ANA": {
+    "away_goals": 5,
+    "home_goals": 1,
+    "period_type": "REG"
+  },
+  "2026-10-09|WSH|NYR": {
+    "away_goals": 1,
+    "home_goals": 3,
+    "period_type": "REG"
   }
 }
