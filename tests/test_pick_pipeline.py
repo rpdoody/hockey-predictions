@@ -120,7 +120,7 @@ def test_stats_rows_must_belong_to_the_team_and_have_enough_games():
     assert not gen._has_enough_games({}, "TOR")
 
 
-def test_main_logs_every_upcoming_game_but_recommends_only_well_sampled_ones(tmp_path, monkeypatch):
+def test_main_logs_every_upcoming_game_and_uses_the_early_blend_under_20_games(tmp_path, monkeypatch):
     monkeypatch.setattr(gen, "NHLClient", _FakeClient)
     monkeypatch.setattr(gen, "OUT_PATH", tmp_path / "recommendations.json")
     monkeypatch.setattr(gen, "LOG_DIR", tmp_path / "pick_log")
@@ -143,13 +143,27 @@ def test_main_logs_every_upcoming_game_but_recommends_only_well_sampled_ones(tmp
     low, high = sorted([row["home_win_prob_raw"], row["fair_home_prob"]])
     assert low <= row["home_win_prob_used"] <= high
 
-    prior = [r for r in rows if r["espn_game_id"] in {"3", "4"}]
-    assert all(r["prior_only"] is True for r in prior)
-    assert all(r["model_source"].startswith("Prior season") for r in prior)
+    # Game 3: the UTA stats row is labelled ARI, so it cannot be used and the game stays last-season only.
+    last_season = [r for r in rows if r["espn_game_id"] == "3"]
+    assert all(r["prior_only"] is True for r in last_season)
+    assert all(r["model_source"].startswith("Prior season") for r in last_season)
+
+    # Game 4: EDM has played 5 games and CGY 30, so the projection blends last season with this one.
+    early = [r for r in rows if r["espn_game_id"] == "4"]
+    assert all(r["prior_only"] is False for r in early)
+    assert all(r["model_source"].startswith("Early blend") for r in early)
+    assert early[0]["home_games_played"] == 5 and early[0]["away_games_played"] == 30
+    assert early[0]["home_blend_weight"] == pytest.approx(0.2)
+    assert early[0]["home_xg"] == early[0]["home_xg_blend"]
+    assert early[0]["home_xg_prior"] is not None
 
     recommendations = json.loads((tmp_path / "recommendations.json").read_text())
     assert isinstance(recommendations, list)
-    assert all(rec["matchup"] == "MTL @ TOR" for rec in recommendations)
+    for rec in recommendations:
+        if rec["matchup"] == "MTL @ TOR":
+            continue
+        assert rec["matchup"] == "CGY @ EDM"
+        assert rec["notes"].startswith("Early blend") and rec["edge"] >= gen.EARLY_MIN_EDGE
 
 
 def test_main_with_no_games_writes_an_empty_file_and_no_log(tmp_path, monkeypatch):
@@ -164,3 +178,43 @@ def test_main_with_no_games_writes_an_empty_file_and_no_log(tmp_path, monkeypatc
 
     assert json.loads((tmp_path / "recommendations.json").read_text()) == []
     assert read_pick_log(tmp_path / "pick_log") == []
+
+
+def _even_game(game_id, home, away):
+    game = _espn_game(game_id, home, away)
+    game["odds"] = [{"provider": "DraftKings", "moneyline": {"home": "-110", "away": "-110"}}]
+    return game
+
+
+class _EdgeClient(_FakeClient):
+    GAMES = [_even_game("10", "AAA", "BBB"), _even_game("11", "CCC", "DDD"), _even_game("12", "EEE", "FFF")]
+    STATS = {
+        "AAA": _stats("AAA", 3.0, 3.0, games=5), "BBB": _stats("BBB", 3.0, 3.0, games=5),
+        "CCC": _stats("CCC", 3.0, 3.0, games=30), "DDD": _stats("DDD", 3.0, 3.0, games=30),
+        "EEE": _stats("EEE", 3.0, 3.0, games=0), "FFF": _stats("FFF", 3.0, 3.0, games=5),
+    }
+
+
+def test_early_games_need_a_bigger_edge_than_established_ones(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+
+    monkeypatch.setattr(gen, "NHLClient", _EdgeClient)
+    monkeypatch.setattr(gen, "OUT_PATH", tmp_path / "recommendations.json")
+    monkeypatch.setattr(gen, "LOG_DIR", tmp_path / "pick_log")
+    monkeypatch.setattr(
+        gen, "calculate_win_probability",
+        lambda home_xg, away_xg: SimpleNamespace(home_win=0.62, away_win=0.38),
+    )
+
+    gen.main()
+
+    rows = {r["home_team"]: r for r in read_pick_log(tmp_path / "pick_log")}
+    assert rows["AAA"]["prior_only"] is False and rows["AAA"]["model_source"].startswith("Early blend")
+    assert rows["CCC"]["prior_only"] is False and rows["CCC"]["model_source"] == "Legacy"
+    # EEE has not played this season, so it falls back to last season alone and is never recommended.
+    assert rows["EEE"]["prior_only"] is True and rows["EEE"]["model_source"].startswith("Prior season")
+
+    # The same 3.6% edge is recommended at 30 games but not at 5.
+    recommendations = json.loads((tmp_path / "recommendations.json").read_text())
+    assert [rec["matchup"] for rec in recommendations] == ["DDD @ CCC"]
+    assert gen.MIN_EDGE <= recommendations[0]["edge"] < gen.EARLY_MIN_EDGE

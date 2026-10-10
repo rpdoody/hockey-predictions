@@ -38,6 +38,9 @@ MIN_EDGE = 0.03           # only include picks with ≥3 % edge
 LOOKAHEAD_DAYS = 7
 MIN_GAMES_PLAYED = 20     # the model was only evaluated once both teams had played this many
 SHRINK_KEEP = 0.5         # share of the model's disagreement with the market that is kept
+EARLY_MIN_EDGE = 0.05     # stricter edge while a team has fewer than MIN_GAMES_PLAYED games
+EARLY_MIN_GAMES = 1       # games a team needs this season before the blended projection is used
+PRIOR_ONLY_K = 1e12       # blend weight so small that the projection is last season only
 MODEL_VERSION = source_version((
     ROOT / "src" / "models" / "expected_goals.py",
     ROOT / "src" / "models" / "win_probability.py",
@@ -97,6 +100,22 @@ def _has_enough_games(stats: dict, abbrev: str) -> bool:
 
 def _is_scheduled(game: dict) -> bool:
     return str(game.get("status", "")).strip().lower() == "scheduled"
+
+
+def _has_early_games(stats: dict, abbrev: str) -> bool:
+    """True when the stats row belongs to this team and it has played at least one game."""
+    if not stats or stats.get("team") != abbrev:
+        return False
+    return (stats.get("games_played") or 0) >= EARLY_MIN_GAMES
+
+
+def _prior_reference(fields: dict) -> dict:
+    """Last-season-only projection fields, for comparing against the blend."""
+    return {
+        "home_xg_prior":           fields["home_xg_blend"],
+        "away_xg_prior":           fields["away_xg_blend"],
+        "home_win_prob_prior_raw": fields["home_win_prob_blend_raw"],
+    }
 
 
 def _prior_stats(client, abbrev: str, season: str, cache: dict) -> dict:
@@ -188,6 +207,27 @@ def main() -> None:
         prior_only = not (
             _has_enough_games(home_stats, home_abbr) and _has_enough_games(away_stats, away_abbr)
         )
+        last_season_id = f"{int(season_id[:4]) - 1}{season_id[:4]}"
+        prior_home = _prior_stats(client, home_abbr, last_season_id, prior_cache)
+        prior_away = _prior_stats(client, away_abbr, last_season_id, prior_cache)
+        blend_fields = blend_projection(
+            home_abbr, away_abbr, current_stats[0], current_stats[1], prior_home, prior_away,
+        )
+        prior_reference = _prior_reference(blend_projection(
+            home_abbr, away_abbr, current_stats[0], current_stats[1], prior_home, prior_away,
+            k_goals=PRIOR_ONLY_K,
+        ))
+        # Under 20 games: once both teams have played, project from last season blended with
+        # this season (weighted by games played) instead of last season alone.
+        early_blend = None
+        if (
+            prior_only
+            and blend_fields["home_xg_blend"] is not None
+            and _has_early_games(home_stats, home_abbr)
+            and _has_early_games(away_stats, away_abbr)
+        ):
+            early_blend = blend_fields
+            prior_only = False
         if prior_only:
             # Too few games this season: evaluate and log on last season's ratings,
             # but never turn the result into a recommendation.
@@ -211,8 +251,8 @@ def main() -> None:
             print(f"[generate_recommendations] TeamMetrics error for {away_abbr} @ {home_abbr}: {e}")
             continue
 
-        home_analytics = None if prior_only else analytics_data.get(home_abbr)
-        away_analytics = None if prior_only else analytics_data.get(away_abbr)
+        home_analytics = None if (prior_only or early_blend is not None) else analytics_data.get(home_abbr)
+        away_analytics = None if (prior_only or early_blend is not None) else analytics_data.get(away_abbr)
 
         if home_analytics and away_analytics:
             try:
@@ -229,6 +269,10 @@ def main() -> None:
         else:
             home_xg, away_xg = calculate_expected_goals(home_tm, away_tm)
             model_source = "Legacy"
+
+        if early_blend is not None:
+            home_xg, away_xg = early_blend["home_xg_blend"], early_blend["away_xg_blend"]
+            model_source = "Early blend (last season + this season)"
 
         try:
             probs = calculate_win_probability(home_xg, away_xg)
@@ -247,13 +291,8 @@ def main() -> None:
         matchup = f"{away_abbr} @ {home_abbr}"
         if prior_only:
             model_source = f"Prior season ({prior_id})"
+        min_edge = EARLY_MIN_EDGE if early_blend is not None else MIN_EDGE
 
-        last_season_id = f"{int(season_id[:4]) - 1}{season_id[:4]}"
-        blend_fields = blend_projection(
-            home_abbr, away_abbr, current_stats[0], current_stats[1],
-            _prior_stats(client, home_abbr, last_season_id, prior_cache),
-            _prior_stats(client, away_abbr, last_season_id, prior_cache),
-        )
         log_records.append({
             "espn_game_id":       game.get("game_id"),
             "game_date":          game_date,
@@ -276,12 +315,13 @@ def main() -> None:
             "home_ml":            home_ml,
             "away_ml":            away_ml,
             **blend_fields,
+            **prior_reference,
         })
 
         # ── 5. Edge calculation ──────────────────────────────────────
         if home_implied is not None and not prior_only:
             home_edge = home_win_prob - home_implied
-            if home_edge >= MIN_EDGE:
+            if home_edge >= min_edge:
                 recommendations.append({
                     "date":           game_date,
                     "game_time":      game_time,
@@ -299,7 +339,7 @@ def main() -> None:
 
         if away_implied is not None and not prior_only:
             away_edge = away_win_prob - away_implied
-            if away_edge >= MIN_EDGE:
+            if away_edge >= min_edge:
                 recommendations.append({
                     "date":           game_date,
                     "game_time":      game_time,
