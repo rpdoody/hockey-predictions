@@ -197,9 +197,10 @@ try:
             prelim = preliminary_rows(read_pick_log(), date_str, get_game_odds_history)
             if prelim:
                 st.warning(
-                    "Season-opening preview. Model predictions start once both teams have played "
-                    "20 games this season. Until then these rows use ratings from last season, "
-                    "blended toward the market, and are never treated as value bets."
+                    "Early-season preview. Under 20 games, these rows blend last season's ratings with "
+                    "this season's results (weighted by games played) and then lean toward the market. "
+                    "Games where both teams have played can be value bets below at a stricter 5% edge; "
+                    "games where a team has not played yet never are."
                 )
                 st.dataframe(pd.DataFrame(display_rows(prelim)), width='stretch', hide_index=True)
                 st.caption(
@@ -213,6 +214,16 @@ try:
         st.info("No NHL games scheduled for that date.")
 except Exception as e:
     st.error(f"Error loading model predictions: {e}")
+
+# Under 20 games played: take the logged early-blend probability so the page matches the
+# generator and the Performance page.
+try:
+    from src.utils.early_value import early_blend_predictions
+    from src.utils.pick_log import read_pick_log as _read_early_log
+    for _key, _pred in early_blend_predictions(_read_early_log(), date_str, normalize_abbrev).items():
+        preds_lookup.setdefault(_key, _pred)
+except Exception:
+    pass
 
 st.subheader("Today's Betting Odds")
 odds_list = []
@@ -306,7 +317,7 @@ if odds_list and preds_lookup:
             if model_prob is None or implied is None:
                 continue
             edge = (model_prob - implied) * 100
-            if edge < min_edge or (confidence != "All" and confidence_tier(model_prob) != confidence):
+            if edge < max(min_edge, pred.get("min_edge", 0)) or (confidence != "All" and confidence_tier(model_prob) != confidence):
                 continue
             kelly = kelly_fraction(model_prob, odds)
             value_rows.append({
@@ -317,6 +328,7 @@ if odds_list and preds_lookup:
                 "Implied": f"{implied:.1%}",
                 "Edge": f"+{edge:.1f}%",
                 "Kelly": f"{kelly:.1%}" if kelly is not None else "N/A",
+                "Basis": pred.get("basis", "Current season"),
                 "_edge": edge,
             })
 if value_rows:
@@ -325,7 +337,7 @@ if value_rows:
     st.caption("Moneyline edge = model win probability − implied probability from odds. Model estimates and Kelly sizing are not validated betting recommendations.")
 else:
     if not preds_lookup:
-        st.info("Value bets need model predictions, which start once both teams have played 20 games this season. Preliminary rows above are for information only and are never flagged as value bets.")
+        st.info("No value bets: model predictions need both teams to have played at least one game this season.")
     elif not odds_list:
         st.info("No matching ESPN odds available for the selected date, so value bets can't be computed.")
     else:
