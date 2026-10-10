@@ -27,6 +27,7 @@ from src.models.expected_goals import (
     calculate_expected_goals,
     calculate_expected_goals_with_analytics,
 )
+from src.models.blend_projection import blend_projection
 from src.models.win_probability import calculate_win_probability
 from src.utils.pick_log import append_pick_log, source_version
 from src.utils.season import current_season_id, to_eastern
@@ -98,6 +99,16 @@ def _is_scheduled(game: dict) -> bool:
     return str(game.get("status", "")).strip().lower() == "scheduled"
 
 
+def _prior_stats(client, abbrev: str, season: str, cache: dict) -> dict:
+    """Last season's team summary, fetched once per team per run."""
+    if abbrev not in cache:
+        try:
+            cache[abbrev] = client.get_team_summary(abbrev, season=season) or {}
+        except Exception:
+            cache[abbrev] = {}
+    return cache[abbrev]
+
+
 def main() -> None:
     client = NHLClient(cache_ttl_minutes=60)
     season_id = current_season_id()
@@ -127,6 +138,7 @@ def main() -> None:
     # ── 3. Build recommendations ────────────────────────────────────────
     recommendations = []
     log_records = []
+    prior_cache: dict = {}
 
     for game in odds_games:
         home_abbr = game.get("home_team")
@@ -172,6 +184,7 @@ def main() -> None:
             home_stats = away_stats = {}
 
         current_gp = (home_stats.get("games_played"), away_stats.get("games_played"))
+        current_stats = (home_stats, away_stats)
         prior_only = not (
             _has_enough_games(home_stats, home_abbr) and _has_enough_games(away_stats, away_abbr)
         )
@@ -235,6 +248,12 @@ def main() -> None:
         if prior_only:
             model_source = f"Prior season ({prior_id})"
 
+        last_season_id = f"{int(season_id[:4]) - 1}{season_id[:4]}"
+        blend_fields = blend_projection(
+            home_abbr, away_abbr, current_stats[0], current_stats[1],
+            _prior_stats(client, home_abbr, last_season_id, prior_cache),
+            _prior_stats(client, away_abbr, last_season_id, prior_cache),
+        )
         log_records.append({
             "espn_game_id":       game.get("game_id"),
             "game_date":          game_date,
@@ -256,6 +275,7 @@ def main() -> None:
             "fair_home_prob":     None if fair_home is None else round(fair_home, 4),
             "home_ml":            home_ml,
             "away_ml":            away_ml,
+            **blend_fields,
         })
 
         # ── 5. Edge calculation ──────────────────────────────────────
