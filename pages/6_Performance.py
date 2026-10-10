@@ -11,6 +11,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from footer import add_betting_oracle_footer
 from src.utils.odds_storage import get_game_odds_history
 from src.utils.totals_puckline import grade_games, summarize
+from src.utils.daily_goals import daily_goal_projection
 from src.utils.performance import (
     STAKE, daily_summary, day_summary, ledger_totals, load_final_scores, load_pick_log,
     load_scorecard, money, pick_ledger, picks_for_date, segment_rows, verdict,
@@ -34,6 +35,36 @@ st.caption(
     'model probability minus the market probability with the margin removed. Win/loss is on the '
     'final score, so it works from the first game, but a few games say very little about model quality.'
 )
+
+st.divider()
+st.subheader('Goals projected for the day')
+goal_day = st.date_input('Projection date', value=datetime.now(ZoneInfo('America/New_York')).date(), key='goals_day')
+day_goals = daily_goal_projection(entries, scores, goal_day.isoformat(), get_game_odds_history)
+if not day_goals['games']:
+    st.info('No projections have been logged for this date yet.')
+else:
+    goal_cols = st.columns(4)
+    goal_cols[0].metric('Projected goals', '{:.1f}'.format(day_goals['projected']), help='Sum of the expected goals logged for every game on the date.')
+    if day_goals['market_games']:
+        goal_cols[1].metric('Market total', '{:.1f}'.format(day_goals['market']), help='Sum of the DraftKings total lines, for {} of {} games.'.format(day_goals['market_games'], len(day_goals['games'])))
+        goal_cols[2].metric('Model minus market', '{:+.1f}'.format(day_goals['projected_where_market'] - day_goals['market']), help='Compares the same {} games on both sides.'.format(day_goals['market_games']))
+    else:
+        goal_cols[1].metric('Market total', 'n/a')
+        goal_cols[2].metric('Model minus market', 'n/a')
+    if day_goals['finals']:
+        goal_cols[3].metric('Actual so far', str(day_goals['actual']), delta='{:+.1f} vs projected'.format(day_goals['actual'] - day_goals['projected_where_final']), delta_color='off', help='{} of {} games final; shootout goals not counted.'.format(day_goals['finals'], len(day_goals['games'])))
+    else:
+        goal_cols[3].metric('Actual so far', 'n/a')
+    with st.expander('Game by game'):
+        st.dataframe(pd.DataFrame([{
+            'Game': g['game'], 'Basis': g['basis'], 'Projected': round(g['projected'], 2),
+            'Market': 'n/a' if g['market'] is None else g['market'],
+            'Actual': '' if g['actual'] is None else g['actual'],
+        } for g in day_goals['games']]), width='stretch', hide_index=True)
+    st.caption(
+        'Projected goals use each game\'s last logged projection before the start (the early blend while teams have played '
+        'under 20 games). These expected totals have not been validated, so read the gap to the market as a lean, not a forecast.'
+    )
 
 st.divider()
 st.subheader('Running total at ${:.0f} per pick'.format(STAKE))
