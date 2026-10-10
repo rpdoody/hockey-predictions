@@ -1,14 +1,15 @@
 '''Blend this season's team ratings with last season's, weighted by games played.
 
 The current-season weight is n / (n + k): zero before the first game, one half
-when n equals k. The k values are starting guesses to be tuned on past seasons.
-Goals take longer to settle than shots, and special teams take longest.
+when n equals k. K_GOALS = 20 was the best overall weight when replaying the 2021-22
+to 2025-26 seasons; the shot and special-teams weights are untuned guesses and do not
+affect expected goals. Goals take longer to settle than shots, and special teams longest.
 '''
 from typing import Optional
 
 from src.models.expected_goals import TeamMetrics
 
-K_GOALS = 30.0
+K_GOALS = 20.0
 K_SHOTS = 20.0
 K_SPECIAL_TEAMS = 60.0
 
