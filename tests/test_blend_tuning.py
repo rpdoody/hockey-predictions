@@ -22,6 +22,15 @@ def test_only_finished_regular_season_games_are_kept_in_date_order():
     assert [g['game_id'] for g in kept] == [2025020001, 2025020002]
 
 
+def test_a_game_listed_several_times_is_counted_once():
+    games = [_game(2025020001, '2025-10-07', 'A', 'B', 3, 2) for _ in range(7)]
+    games.append(_game(2025020002, '2025-10-08', 'B', 'A', 1, 0))
+    kept = regular_season_games(games)
+    assert [g['game_id'] for g in kept] == [2025020001, 2025020002]
+    rates, _ = season_rates(kept)
+    assert rates['A'] == (1.5, 1.5)
+
+
 def test_season_rates_and_league_average():
     games = [_game(1, '2025-10-07', 'A', 'B', 4, 1), _game(2, '2025-10-08', 'B', 'A', 2, 3)]
     rates, league = season_rates(games)

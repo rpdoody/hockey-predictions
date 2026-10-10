@@ -18,26 +18,31 @@ from src.models.blend_tuning import (
 HISTORY = ROOT / 'data_files' / 'historical'
 
 
-def load_games(season: str) -> list:
+def load_games(season: str) -> tuple:
+    '''(regular-season games with repeats removed, number of rows in the file).'''
     path = HISTORY / season / 'games.json'
-    return regular_season_games(json.loads(path.read_text())) if path.exists() else []
+    if not path.exists():
+        return [], 0
+    rows = json.loads(path.read_text())
+    return regular_season_games(rows), len(rows)
 
 
 def collect(exclude: set, home_advantage) -> dict:
     seasons = sorted(p.name for p in HISTORY.iterdir() if re.fullmatch(r'\d{4}-\d{2}', p.name))
     results = {k: [] for k in K_GRID}
-    used = []
+    print('Games replayed per season (a full 32-team season has 1312):')
     for prior, current in zip(seasons, seasons[1:]):
         if current in exclude:
             continue
-        prior_games, games = load_games(prior), load_games(current)
+        prior_games, _ = load_games(prior)
+        games, rows = load_games(current)
         if not prior_games or not games:
             continue
+        note = '' if rows == len(games) else '  <- file has {} rows, repeats removed'.format(rows)
+        print('  {}: {}{}'.format(current, len(games), note))
         prior_rates, league = season_rates(prior_games)
         for k in K_GRID:
             results[k].extend(replay(games, prior_rates, league, k, home_advantage))
-        used.append(current)
-    print('Seasons replayed: ' + ', '.join(used))
     return results
 
 

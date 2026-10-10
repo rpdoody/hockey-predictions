@@ -18,8 +18,12 @@ BUCKETS = ((0, 9), (10, 19), (20, 39), (40, 400))
 
 
 def regular_season_games(games: Iterable[dict]) -> List[dict]:
-    '''Finished regular-season games with scores, oldest first.'''
-    kept = []
+    '''Finished regular-season games with scores, one per game id, oldest first.
+
+    A game that appears more than once is kept once: a repeat would be predicted after its
+    own score had already been added to the team rates.
+    '''
+    kept, seen = [], set()
     for game in games:
         game_id = str(game.get('game_id', ''))
         if len(game_id) >= 6 and game_id[4:6] != '02':
@@ -28,6 +32,10 @@ def regular_season_games(games: Iterable[dict]) -> List[dict]:
             continue
         if game.get('home_score') is None or game.get('away_score') is None:
             continue
+        if game_id:
+            if game_id in seen:
+                continue
+            seen.add(game_id)
         kept.append(game)
     return sorted(kept, key=lambda g: (g.get('date') or '', g.get('start_time') or '', str(g.get('game_id'))))
 
