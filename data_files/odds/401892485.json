@@ -1,0 +1,20 @@
+{
+  "game_id": "401892485",
+  "home_team": "BUF",
+  "away_team": "FLA",
+  "start_time": "2026-10-12T17:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-10-11T20:43:45+00:00",
+      "provider": "Draft Kings",
+      "home_ml": -105,
+      "away_ml": -115,
+      "total": 6.5,
+      "over_odds": 114,
+      "under_odds": -135,
+      "home_pl_odds": -270,
+      "away_pl_odds": 220,
+      "home_pl_line": 1.5
+    }
+  ]
+}
