@@ -2,50 +2,50 @@
   "which": "last",
   "min_edge": 0.03,
   "games_logged": 133,
-  "games_scored": 68,
-  "games_pending": 65,
+  "games_scored": 82,
+  "games_pending": 51,
   "overall": {
     "probabilities": {
-      "n": 68,
+      "n": 82,
       "p_raw": {
-        "brier": 0.2345,
-        "log_loss": 0.6616
+        "brier": 0.2332,
+        "log_loss": 0.6593
       },
       "p_used": {
-        "brier": 0.2324,
-        "log_loss": 0.657
+        "brier": 0.2297,
+        "log_loss": 0.6518
       },
       "p_market": {
-        "brier": 0.2317,
-        "log_loss": 0.6552
+        "brier": 0.2279,
+        "log_loss": 0.6474
       }
     },
     "bets": {
-      "n": 5,
-      "wins": 3,
-      "hit_rate": 0.6,
-      "units": 1.43,
-      "roi": 0.286,
-      "avg_edge": 0.0323,
-      "clv_n": 5,
-      "avg_clv": -0.009
+      "n": 9,
+      "wins": 4,
+      "hit_rate": 0.4444,
+      "units": -0.27,
+      "roi": -0.03,
+      "avg_edge": 0.0352,
+      "clv_n": 9,
+      "avg_clv": -0.0064
     }
   },
   "by_segment": {
     "prior_only": {
       "probabilities": {
-        "n": 68,
+        "n": 69,
         "p_raw": {
-          "brier": 0.2345,
-          "log_loss": 0.6616
+          "brier": 0.2362,
+          "log_loss": 0.6651
         },
         "p_used": {
-          "brier": 0.2324,
-          "log_loss": 0.657
+          "brier": 0.2334,
+          "log_loss": 0.6591
         },
         "p_market": {
-          "brier": 0.2317,
-          "log_loss": 0.6552
+          "brier": 0.232,
+          "log_loss": 0.6559
         }
       },
       "bets": {
@@ -58,7 +58,34 @@
         "clv_n": 5,
         "avg_clv": -0.009
       }
+    },
+    "early": {
+      "probabilities": {
+        "n": 13,
+        "p_raw": {
+          "brier": 0.2173,
+          "log_loss": 0.6282
+        },
+        "p_used": {
+          "brier": 0.2103,
+          "log_loss": 0.6132
+        },
+        "p_market": {
+          "brier": 0.2059,
+          "log_loss": 0.6024
+        }
+      },
+      "bets": {
+        "n": 4,
+        "wins": 1,
+        "hit_rate": 0.25,
+        "units": -1.7,
+        "roi": -0.425,
+        "avg_edge": 0.0389,
+        "clv_n": 4,
+        "avg_clv": -0.0032
+      }
     }
   },
-  "generated_at": "2026-10-10T15:56:11+00:00"
+  "generated_at": "2026-10-11T12:41:55+00:00"
 }
