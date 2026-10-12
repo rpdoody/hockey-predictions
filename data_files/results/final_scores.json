@@ -413,5 +413,20 @@
     "away_goals": 1,
     "home_goals": 2,
     "period_type": "OT"
+  },
+  "2026-10-11|NYR|VAN": {
+    "away_goals": 2,
+    "home_goals": 6,
+    "period_type": "REG"
+  },
+  "2026-10-11|PHI|CAR": {
+    "away_goals": 4,
+    "home_goals": 1,
+    "period_type": "REG"
+  },
+  "2026-10-11|WSH|SEA": {
+    "away_goals": 5,
+    "home_goals": 3,
+    "period_type": "REG"
   }
 }
