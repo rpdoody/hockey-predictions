@@ -1,0 +1,20 @@
+{
+  "game_id": "401892491",
+  "home_team": "CAR",
+  "away_team": "WSH",
+  "start_time": "2026-10-13T22:45Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-10-12T16:21:58+00:00",
+      "provider": "DraftKings",
+      "home_ml": -148,
+      "away_ml": 124,
+      "total": 6.5,
+      "over_odds": 105,
+      "under_odds": -125,
+      "home_pl_odds": 180,
+      "away_pl_odds": -218,
+      "home_pl_line": -1.5
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "game_id": "401892489",
+  "home_team": "CBJ",
+  "away_team": "FLA",
+  "start_time": "2026-10-13T22:15Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-10-12T16:21:58+00:00",
+      "provider": "DraftKings",
+      "home_ml": -125,
+      "away_ml": 105,
+      "total": 5.5,
+      "over_odds": -130,
+      "under_odds": 110,
+      "home_pl_odds": 195,
+      "away_pl_odds": -238,
+      "home_pl_line": -1.5
+    }
+  ]
+}

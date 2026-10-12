@@ -1,0 +1,20 @@
+{
+  "game_id": "401892503",
+  "home_team": "SJS",
+  "away_team": "BOS",
+  "start_time": "2026-10-14T03:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-10-12T16:21:58+00:00",
+      "provider": "DraftKings",
+      "home_ml": -122,
+      "away_ml": 102,
+      "total": 6.5,
+      "over_odds": 110,
+      "under_odds": -130,
+      "home_pl_odds": 195,
+      "away_pl_odds": -238,
+      "home_pl_line": -1.5
+    }
+  ]
+}

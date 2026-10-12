@@ -1,0 +1,20 @@
+{
+  "game_id": "401892500",
+  "home_team": "UTA",
+  "away_team": "TOR",
+  "start_time": "2026-10-14T01:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-10-12T16:21:58+00:00",
+      "provider": "DraftKings",
+      "home_ml": -142,
+      "away_ml": 120,
+      "total": 6.5,
+      "over_odds": -108,
+      "under_odds": -112,
+      "home_pl_odds": 180,
+      "away_pl_odds": -218,
+      "home_pl_line": -1.5
+    }
+  ]
+}
