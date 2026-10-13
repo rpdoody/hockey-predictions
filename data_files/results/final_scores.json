@@ -428,5 +428,20 @@
     "away_goals": 5,
     "home_goals": 3,
     "period_type": "REG"
+  },
+  "2026-10-12|BUF|FLA": {
+    "away_goals": 3,
+    "home_goals": 5,
+    "period_type": "REG"
+  },
+  "2026-10-12|MIN|VGK": {
+    "away_goals": 2,
+    "home_goals": 4,
+    "period_type": "REG"
+  },
+  "2026-10-12|NJD|OTT": {
+    "away_goals": 4,
+    "home_goals": 1,
+    "period_type": "REG"
   }
 }
