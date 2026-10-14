@@ -1,0 +1,20 @@
+{
+  "game_id": "401892509",
+  "home_team": "TBL",
+  "away_team": "SEA",
+  "start_time": "2026-10-15T23:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-10-14T20:23:45+00:00",
+      "provider": "Draft Kings",
+      "home_ml": -245,
+      "away_ml": 200,
+      "total": 6.5,
+      "over_odds": 102,
+      "under_odds": -122,
+      "home_pl_odds": 105,
+      "away_pl_odds": -125,
+      "home_pl_line": -1.5
+    }
+  ]
+}

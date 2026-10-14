@@ -1,0 +1,20 @@
+{
+  "game_id": "401892516",
+  "home_team": "VGK",
+  "away_team": "CGY",
+  "start_time": "2026-10-16T02:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-10-14T20:23:45+00:00",
+      "provider": "Draft Kings",
+      "home_ml": -305,
+      "away_ml": 245,
+      "total": 6.5,
+      "over_odds": 110,
+      "under_odds": -130,
+      "home_pl_odds": -125,
+      "away_pl_odds": 105,
+      "home_pl_line": -1.5
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "game_id": "401892510",
+  "home_team": "FLA",
+  "away_team": "VAN",
+  "start_time": "2026-10-15T23:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-10-14T20:23:45+00:00",
+      "provider": "Draft Kings",
+      "home_ml": -298,
+      "away_ml": 240,
+      "total": 6.5,
+      "over_odds": 110,
+      "under_odds": -130,
+      "home_pl_odds": -115,
+      "away_pl_odds": -105,
+      "home_pl_line": -1.5
+    }
+  ]
+}
