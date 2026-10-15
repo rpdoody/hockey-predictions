@@ -523,5 +523,15 @@
     "away_goals": 2,
     "home_goals": 5,
     "period_type": "REG"
+  },
+  "2026-10-14|COL|DAL": {
+    "away_goals": 3,
+    "home_goals": 2,
+    "period_type": "SO"
+  },
+  "2026-10-14|WSH|MTL": {
+    "away_goals": 4,
+    "home_goals": 5,
+    "period_type": "REG"
   }
 }
