@@ -533,5 +533,60 @@
     "away_goals": 4,
     "home_goals": 5,
     "period_type": "REG"
+  },
+  "2026-10-15|CHI|WPG": {
+    "away_goals": 3,
+    "home_goals": 4,
+    "period_type": "OT"
+  },
+  "2026-10-15|DET|PHI": {
+    "away_goals": 1,
+    "home_goals": 2,
+    "period_type": "REG"
+  },
+  "2026-10-15|EDM|UTA": {
+    "away_goals": 4,
+    "home_goals": 2,
+    "period_type": "REG"
+  },
+  "2026-10-15|FLA|VAN": {
+    "away_goals": 2,
+    "home_goals": 3,
+    "period_type": "OT"
+  },
+  "2026-10-15|MIN|STL": {
+    "away_goals": 4,
+    "home_goals": 5,
+    "period_type": "REG"
+  },
+  "2026-10-15|NJD|NYR": {
+    "away_goals": 1,
+    "home_goals": 7,
+    "period_type": "REG"
+  },
+  "2026-10-15|NSH|SJS": {
+    "away_goals": 3,
+    "home_goals": 2,
+    "period_type": "SO"
+  },
+  "2026-10-15|OTT|NYI": {
+    "away_goals": 1,
+    "home_goals": 2,
+    "period_type": "SO"
+  },
+  "2026-10-15|TBL|SEA": {
+    "away_goals": 3,
+    "home_goals": 4,
+    "period_type": "OT"
+  },
+  "2026-10-15|TOR|BUF": {
+    "away_goals": 5,
+    "home_goals": 4,
+    "period_type": "OT"
+  },
+  "2026-10-15|VGK|CGY": {
+    "away_goals": 2,
+    "home_goals": 6,
+    "period_type": "REG"
   }
 }
