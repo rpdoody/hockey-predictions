@@ -1,0 +1,20 @@
+{
+  "game_id": "401892534",
+  "home_team": "CGY",
+  "away_team": "CAR",
+  "start_time": "2026-10-19T00:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-10-17T18:58:15+00:00",
+      "provider": "Draft Kings",
+      "home_ml": 160,
+      "away_ml": -192,
+      "total": 6.5,
+      "over_odds": 114,
+      "under_odds": -135,
+      "home_pl_odds": -148,
+      "away_pl_odds": 124,
+      "home_pl_line": 1.5
+    }
+  ]
+}
