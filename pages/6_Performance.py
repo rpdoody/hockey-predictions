@@ -11,6 +11,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from footer import add_betting_oracle_footer
 from src.utils.odds_storage import get_game_odds_history
 from src.utils.totals_puckline import grade_games, summarize
+from src.utils.totals_diagnostics import blend_weight, calibration_table, total_bias, tune_goal_scale
 from src.utils.daily_goals import daily_goal_projection
 from src.utils.gap_stats import gap_summary, log_loss_gaps
 from src.utils.performance import (
@@ -157,6 +158,48 @@ else:
                 'Edge': format(r['edge'], '+.1%'), 'Result': r['bet_result'].title(),
                 'Profit': money(r['profit']),
             } for r in placed]), width='stretch', hide_index=True)
+
+if market_table:
+    with st.expander('Diagnostics: where the model loses'):
+        bias = total_bias(entries, scores, market_rows)
+        if bias:
+            b1, b2, b3 = st.columns(3)
+            b1.metric('Model total', '{:.2f}'.format(bias['model_mean']), help='Mean expected goals per scored game ({} games).'.format(bias['n']))
+            b2.metric('Actual total', '{:.2f}'.format(bias['actual_mean']), help='Mean goals per scored game; includes any shootout goal, so it reads slightly high.')
+            market_mean = bias.get('market_line_mean')
+            b3.metric('Market line', 'n/a' if market_mean is None else '{:.2f}'.format(market_mean), help='Mean DraftKings total on graded games only.')
+
+        for market in ('Total', 'Puck line'):
+            st.markdown('**{}**'.format(market))
+            blend = blend_weight(market_rows, market)
+            if blend is None:
+                st.caption('Needs at least 30 decided games before a blend weight means anything.')
+                continue
+            st.write(
+                'Best weight on the model: {:.0%} (the rest on the market). '
+                'Log loss at that weight {:.4f}, model alone {:.4f}, market alone {:.4f}, over {} games.'.format(
+                    blend['best_weight'], blend['log_loss_best'], blend['log_loss_model'],
+                    blend['log_loss_market'], blend['n']))
+            calib = calibration_table(market_rows, market)
+            if calib:
+                calib_df = pd.DataFrame(calib).rename(columns={
+                    'bin': 'Bin', 'n': 'Games', 'model_p': 'Model', 'market_p': 'Market', 'actual': 'Actual'})
+                st.dataframe(
+                    calib_df, width='stretch', hide_index=True,
+                    column_config={c: st.column_config.NumberColumn(c, format='%.3f') for c in ('Model', 'Market', 'Actual')})
+
+        if st.button('Test goal-rate scales (slow)', key='tune_scale'):
+            for market in ('Total', 'Puck line'):
+                tuned = tune_goal_scale(entries, scores, get_game_odds_history, market)
+                st.markdown('**{}**'.format(market))
+                st.dataframe(pd.DataFrame(tuned).rename(columns={'scale': 'Goal scale', 'n': 'Games', 'log_loss': 'Log loss'}),
+                             width='stretch', hide_index=True)
+        st.caption(
+            'Calibration bins hold equal numbers of games, sorted by the model probability of the Over (totals) or the '
+            'home side (puck line). If Actual tracks Market better than Model, the model is adding noise. '
+            'The scale test multiplies both teams expected goals; a lower log loss away from 1.0 points to a goal-rate bias.'
+        )
+
 st.caption(
     'Expected goals come straight from the raw model, which has not been validated for totals or puck lines. '
     'Lower log loss is better; the model is only useful here if it beats the market column. '
