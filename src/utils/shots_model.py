@@ -1,7 +1,7 @@
 """Shots-on-goal projection: shrunk per-minute rate x projected ice time, with negative binomial spread."""
 import math
 import statistics
-from typing import Dict, List, Optional, Sequence
+from typing import Callable, Dict, List, Optional, Sequence
 
 PRIOR_MINUTES = 300.0     # weight of the prior rate, in minutes of ice time (assumption; tune with the backtest)
 MIN_PRIOR_MINUTES = 300.0  # last-season ice time needed before trusting that player's own prior rate
@@ -111,12 +111,15 @@ def expected_value(prob: float, price: float) -> float:
 
 def walk_forward(
     players: List[dict], prior_minutes: float = PRIOR_MINUTES, smoothing: float = TOI_SMOOTHING, prior_shrink: float = 0.0,
+    adjust: Optional[Callable] = None,
 ) -> List[dict]:
     """Predict every game from only the games before it.
 
     Each player dict: name, rows (this season), prior_rows (last season), baseline_rate (fallback shots per minute).
     prior_shrink pulls last season's own rate toward the position baseline, counted in minutes of evidence;
     0 uses last season's rate as is. Last season's top shooters partly regress, so a positive value can help.
+    adjust(player, row, history) may return a multiplier for the projection (home/away, rest, opponent);
+    it sees only the game being predicted and earlier games.
     """
     out = []
     for player in players:
@@ -139,6 +142,8 @@ def walk_forward(
             mu = project_shots(history, prior_rate, prior_avg_minutes, prior_minutes, smoothing)
             if mu is None:
                 continue
+            if adjust is not None:
+                mu *= adjust(player, row, history)
             to_date = sum(r['shots'] for r in history) / len(history) if history else prior_per_game
             out.append({
                 'player': player['name'], 'date': row['date'], 'actual': row['shots'],
