@@ -588,5 +588,15 @@
     "away_goals": 2,
     "home_goals": 6,
     "period_type": "REG"
+  },
+  "2026-10-16|ANA|BOS": {
+    "away_goals": 4,
+    "home_goals": 2,
+    "period_type": "REG"
+  },
+  "2026-10-16|COL|PIT": {
+    "away_goals": 2,
+    "home_goals": 5,
+    "period_type": "REG"
   }
 }
