@@ -1,5 +1,6 @@
 """Shots-on-goal projection: shrunk per-minute rate x projected ice time, with negative binomial spread."""
 import math
+import statistics
 from typing import Dict, List, Optional, Sequence
 
 PRIOR_MINUTES = 300.0     # weight of the prior rate, in minutes of ice time (assumption; tune with the backtest)
@@ -108,16 +109,28 @@ def expected_value(prob: float, price: float) -> float:
     return prob * profit - (1.0 - prob)
 
 
-def walk_forward(players: List[dict], prior_minutes: float = PRIOR_MINUTES, smoothing: float = TOI_SMOOTHING) -> List[dict]:
+def walk_forward(
+    players: List[dict], prior_minutes: float = PRIOR_MINUTES, smoothing: float = TOI_SMOOTHING, prior_shrink: float = 0.0,
+) -> List[dict]:
     """Predict every game from only the games before it.
 
     Each player dict: name, rows (this season), prior_rows (last season), baseline_rate (fallback shots per minute).
+    prior_shrink pulls last season's own rate toward the position baseline, counted in minutes of evidence;
+    0 uses last season's rate as is. Last season's top shooters partly regress, so a positive value can help.
     """
     out = []
     for player in players:
         prior_rows = player.get('prior_rows') or []
         prior_total = sum(r['minutes'] for r in prior_rows)
-        prior_rate = season_rate(prior_rows) if prior_total >= MIN_PRIOR_MINUTES else player.get('baseline_rate')
+        baseline = player.get('baseline_rate')
+        if prior_total >= MIN_PRIOR_MINUTES:
+            prior_shots = sum(r['shots'] for r in prior_rows)
+            if prior_shrink > 0 and baseline is not None:
+                prior_rate = (prior_shots + prior_shrink * baseline) / (prior_total + prior_shrink)
+            else:
+                prior_rate = prior_shots / prior_total
+        else:
+            prior_rate = baseline
         prior_avg_minutes = prior_total / len(prior_rows) if prior_rows else None
         prior_per_game = sum(r['shots'] for r in prior_rows) / len(prior_rows) if prior_rows else None
         rows = player['rows']
@@ -142,6 +155,7 @@ def evaluate(predictions: List[dict], key: str = 'mu', lines: Sequence[float] = 
     n = len(rows)
     result = {
         'n': n, 'dispersion': dispersion,
+        'mean_predicted': sum(means) / n, 'mean_actual': sum(actuals) / n,
         'mae': sum(abs(m - y) for m, y in zip(means, actuals)) / n,
         'nb_log_likelihood': sum(math.log(max(nb_pmf(int(y), m, dispersion), 1e-12)) for m, y in zip(means, actuals)) / n,
         'lines': {},
@@ -154,3 +168,21 @@ def evaluate(predictions: List[dict], key: str = 'mu', lines: Sequence[float] = 
             'log_loss': -sum(math.log(min(max(p if h else 1 - p, 1e-9), 1.0)) for p, h in zip(predicted, hits)) / n,
         }
     return result
+
+
+def paired_loglik_gap(predictions: List[dict], key_a: str = 'mu', key_b: str = 'naive_prior') -> Optional[dict]:
+    """Mean per-game log likelihood of predictor A minus B, with a standard error; positive means A is better."""
+    rows = [p for p in predictions if p.get(key_a) and p[key_a] > 0 and p.get(key_b) and p[key_b] > 0]
+    if len(rows) < 2:
+        return None
+    actuals = [p['actual'] for p in rows]
+    disp_a = estimate_dispersion([p[key_a] for p in rows], actuals)
+    disp_b = estimate_dispersion([p[key_b] for p in rows], actuals)
+    diffs = [
+        math.log(max(nb_pmf(int(y), p[key_a], disp_a), 1e-12)) - math.log(max(nb_pmf(int(y), p[key_b], disp_b), 1e-12))
+        for p, y in zip(rows, actuals)
+    ]
+    n = len(diffs)
+    mean = sum(diffs) / n
+    se = statistics.stdev(diffs) / math.sqrt(n)
+    return {'n': n, 'mean': mean, 'se': se, 'low': mean - 1.96 * se, 'high': mean + 1.96 * se}

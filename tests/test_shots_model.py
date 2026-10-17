@@ -4,7 +4,8 @@ import pytest
 
 from src.utils.shots_model import (
     american_to_prob, blended_rate, devig_two_way, estimate_dispersion, evaluate, expected_value,
-    game_rows, nb_pmf, parse_toi, project_minutes, project_shots, prob_over, season_rate, walk_forward,
+    game_rows, nb_pmf, paired_loglik_gap, parse_toi, project_minutes, project_shots, prob_over,
+    season_rate, walk_forward,
 )
 
 
@@ -76,10 +77,14 @@ def test_odds_helpers():
     assert expected_value(0.55, -110) == pytest.approx(0.55 * (100 / 110) - 0.45)
 
 
+def _walk_player(rows, prior_shots_per_game=4, baseline=0.1):
+    prior = [{'date': f'2025-1{i % 3}-0{i % 9 + 1}', 'shots': prior_shots_per_game, 'minutes': 20.0} for i in range(30)]
+    return {'name': 'A', 'rows': rows, 'prior_rows': prior, 'baseline_rate': baseline}
+
+
 def test_walk_forward_never_uses_the_game_it_predicts_or_later_games():
     rows = [{'date': f'2026-10-{d:02d}', 'shots': s, 'minutes': 18.0} for d, s in enumerate([2, 3, 1, 4, 2], start=1)]
-    prior = [{'date': f'2025-1{i % 3}-0{i % 9 + 1}', 'shots': 2, 'minutes': 18.0} for i in range(30)]
-    base = {'name': 'A', 'rows': rows, 'prior_rows': prior, 'baseline_rate': 0.1}
+    base = _walk_player(rows, 2)
     first = walk_forward([base])
     changed = [dict(r) for r in rows]
     changed[3]['shots'] = 11
@@ -88,10 +93,31 @@ def test_walk_forward_never_uses_the_game_it_predicts_or_later_games():
     assert first[4]['mu'] != pytest.approx(second[4]['mu'])
 
 
+def test_prior_shrink_pulls_last_seasons_rate_toward_the_position_baseline():
+    rows = [{'date': '2026-10-01', 'shots': 3, 'minutes': 20.0}]
+    player = _walk_player(rows)
+    plain = walk_forward([player])[0]['mu']
+    shrunk = walk_forward([player], prior_shrink=600)[0]['mu']
+    assert plain == pytest.approx(0.2 * 20.0)
+    assert shrunk == pytest.approx((120 + 600 * 0.1) / (600 + 600) * 20.0)
+    assert 0.1 * 20 < shrunk < plain
+    assert walk_forward([player], prior_shrink=0)[0]['mu'] == pytest.approx(plain)
+
+
 def test_evaluate_reports_calibration_for_each_line():
     preds = [{'actual': a, 'mu': 2.5, 'naive_prior': 2.0, 'naive_to_date': None} for a in [1, 2, 3, 4, 2, 3, 5, 0] * 5]
     result = evaluate(preds, 'mu')
     assert result['n'] == 40 and set(result['lines']) == {1.5, 2.5, 3.5}
     assert result['lines'][2.5]['observed_over'] == pytest.approx(20 / 40)
     assert result['lines'][1.5]['observed_over'] == pytest.approx(30 / 40)
+    assert result['mean_predicted'] == pytest.approx(2.5) and result['mean_actual'] == pytest.approx(2.5)
     assert evaluate(preds, 'naive_prior', lines=(2.5,))['n'] == 40
+
+
+def test_paired_gap_is_positive_when_the_first_predictor_is_closer_and_zero_for_identical_ones():
+    preds = [{'actual': a, 'a': 3.0, 'b': 1.0, 'c': 3.0} for a in [3, 2, 4, 3, 3, 5, 2, 3]]
+    better = paired_loglik_gap(preds, 'a', 'b')
+    assert better['mean'] > 0 and better['low'] < better['mean'] < better['high']
+    same = paired_loglik_gap(preds, 'a', 'c')
+    assert same['mean'] == pytest.approx(0.0) and same['se'] == pytest.approx(0.0)
+    assert paired_loglik_gap(preds[:1], 'a', 'b') is None

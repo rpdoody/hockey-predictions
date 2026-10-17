@@ -4,7 +4,7 @@ from datetime import timedelta
 import pytest
 
 from src.utils.shots_backtest import (
-    build_players, format_report, load_game_rows, position_baselines, previous_season_id, run_backtest,
+    DEFAULT_SETTING, build_players, format_report, load_game_rows, position_baselines, previous_season_id, run_backtest,
 )
 
 
@@ -37,7 +37,7 @@ class FakeClient:
 
     def get_skater_stats(self, season=None, limit=100, sort='points'):
         assert season == '20252026' and sort == 'shots'
-        return self.skaters[:limit]
+        return self.skaters if limit < 0 else self.skaters[:limit]
 
     def _fetch_sync(self, url, ttl=None):
         self.urls.append((url, ttl))
@@ -77,12 +77,23 @@ def test_build_players_skips_failures_and_players_without_current_games():
     assert all(p['baseline_rate'] and p['prior_rows'] and p['rows'] for p in players)
 
 
-def test_backtest_runs_end_to_end_and_compares_on_the_same_games():
+def test_backtest_picks_settings_early_and_scores_on_later_games_only():
     client = FakeClient(n=40)
     players, _ = build_players(client, '20262027', '20252026', limit=40, pause=0)
-    report = run_backtest(players, grid=(100, 300, 600))
-    assert report['players'] == 39 and report['best_prior_minutes'] in (100, 300, 600)
-    sizes = {key: e['n'] for key, e in report['comparison'].items()}
-    assert len(set(sizes.values())) == 1 and sizes['mu'] == report['compared_games'] > 0
+    report = run_backtest(players, prior_grid=(100, 600), shrink_grid=(0, 500))
+    assert report['players'] == 39
+    assert report['best'] in report['selection'] and DEFAULT_SETTING in report['selection']
+    sizes = {name: e['n'] for name, e in report['comparison'].items()}
+    assert len(set(sizes.values())) == 1 and sizes['model (best setting)'] == report['holdout_games'] > 0
+    assert report['gap_vs_last_season']['n'] == report['holdout_games']
+    assert report['gap_vs_default']['n'] == report['holdout_games']
     text = format_report(report)
-    assert 'best' in text and 'naive_to_date' in text and 'line 2.5' in text
+    assert 'holdout' in text and 'paired' in text and 'best setting' in text and 'line 2.5' in text
+
+
+def test_backtest_default_comparison_is_identical_when_the_best_setting_is_the_default():
+    client = FakeClient(n=20)
+    players, _ = build_players(client, '20262027', '20252026', limit=20, pause=0)
+    report = run_backtest(players, prior_grid=(300,), shrink_grid=(0,))
+    assert report['best'] == DEFAULT_SETTING
+    assert report['gap_vs_default']['mean'] == pytest.approx(0.0)
