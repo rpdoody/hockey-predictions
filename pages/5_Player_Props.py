@@ -1,34 +1,61 @@
-﻿"""Player prop betting analysis."""
+"""Player prop betting analysis."""
 import streamlit as st
 import pandas as pd
 from pathlib import Path
 import sys
 
+
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from src.api.nhl_client import NHLClient
+from src.utils.shooting_regression import ALPHA, MIN_SHOTS, PRIOR_SHOTS, regression_candidates
 from footer import add_betting_oracle_footer
 
+
 st.title("🎯 Player Props Analysis")
+
 
 # Initialize client
 @st.cache_resource
 def get_client():
     return NHLClient()
 
+
 client = get_client()
+
+LEAGUE_POOL = 1000  # large enough to cover every skater with a game played
+SORT_KEYS = {"Points": "points", "Goals": "goals", "Assists": "assists", "Shots": "shots"}
+
+
+# One cached fetch per (sort, limit) so the table, search and regression tab share data
+@st.cache_data(ttl=300, show_spinner=False)
+def load_skaters(sort: str, limit: int) -> list:
+    return get_client().get_skater_stats(limit=limit, sort=sort)
+
+
+@st.cache_data(ttl=300, show_spinner=False)
+def load_goalies(sort: str, limit: int) -> list:
+    return get_client().get_goalie_stats(limit=limit, sort=sort)
+
+
+@st.cache_data(ttl=300, show_spinner=False)
+def load_skater_analytics(limit: int) -> list:
+    return get_client().get_skater_analytics(limit=limit)
+
 
 # Prop type selector
 prop_type = st.selectbox("Stat Type", ["Points", "Goals", "Assists", "Shots", "Saves (Goalies)"])
 
+
 # Get player stats based on type
 st.subheader(f"Top Players by {prop_type}")
 
+
 try:
     if prop_type == "Saves (Goalies)":
-        # Get goalie stats
-        players = client.get_goalie_stats(limit=20)
-        
+        # Ranked by saves, the stat this prop is about
+        players = load_goalies("saves", 20)
+
         if players:
             player_df = pd.DataFrame([
                 {
@@ -46,7 +73,7 @@ try:
                 }
                 for idx, p in enumerate(players)
             ])
-            
+
             st.dataframe(
                 player_df,
                 width='stretch',
@@ -68,9 +95,9 @@ try:
         else:
             st.info("No goalie stats available.")
     else:
-        # Get skater stats
-        players = client.get_skater_stats(limit=50)
-        
+        # The API ranks by the chosen stat, so this is the true top 50 for it
+        players = load_skaters(SORT_KEYS[prop_type], 50)
+
         if players:
             player_df = pd.DataFrame([
                 {
@@ -88,20 +115,7 @@ try:
                 }
                 for idx, p in enumerate(players)
             ])
-            
-            # Sort by selected stat type
-            if prop_type == "Points":
-                player_df = player_df.sort_values("Points", ascending=False)
-            elif prop_type == "Goals":
-                player_df = player_df.sort_values("Goals", ascending=False)
-            elif prop_type == "Assists":
-                player_df = player_df.sort_values("Assists", ascending=False)
-            elif prop_type == "Shots":
-                player_df = player_df.sort_values("Shots", ascending=False)
-            
-            # Reset rank after sorting
-            player_df["Rank"] = range(1, len(player_df) + 1)
-            
+
             st.dataframe(
                 player_df,
                 width='stretch',
@@ -122,24 +136,24 @@ try:
             )
         else:
             st.info("No player stats available.")
-    
+
     # Player search
     st.divider()
     st.subheader("Player Search")
     player_search = st.text_input("Search by name", placeholder="Enter player name...")
-    
+
     if player_search:
-        # Filter players
+        # Search the whole league, not just the top scorers
         if prop_type == "Saves (Goalies)":
-            players = client.get_goalie_stats(limit=100)
+            players = load_goalies("saves", 100)
         else:
-            players = client.get_skater_stats(limit=200)
-        
-        matching = [p for p in players if player_search.lower() in p["name"].lower()]
-        
+            players = load_skaters("points", LEAGUE_POOL)
+
+        matching = [p for p in players if player_search.lower() in (p["name"] or "").lower()]
+
         if matching:
             st.success(f"Found {len(matching)} matching player(s)")
-            
+
             for p in matching[:5]:  # Show first 5 matches
                 team_name = client.TEAM_NAMES.get(p['team'], p['team'])
                 with st.expander(f"{p['name']} ({team_name})"):
@@ -160,23 +174,28 @@ try:
                         st.write(f"**+/-:** {p.get('plus_minus', 0)}")
         else:
             st.warning("No players found matching that name.")
-            
+
 except Exception as e:
     st.error(f"Error loading player stats: {e}")
 
+
 # ── Per-60 Analytics ─────────────────────────────────────────────────────────
 st.divider()
-st.subheader("⚡ Per-60 Rates & Shooting% Regression Watch")
+st.subheader("⚡ Per-60 Rates & Shooting Luck Watch")
 st.caption(
     "Per-60 rates normalise production for players with different ice time. "
-    "Shooting% regression flags players who are likely due for a slowdown (or boost)."
+    "Shooting luck compares each player's goals with what a typical player of the same type "
+    "would score on the same shots."
 )
 
-per60_tab, regression_tab = st.tabs(["Per-60 Rates", "Regression Watch"])
+
+per60_tab, regression_tab = st.tabs(["Per-60 Rates", "Shooting Luck Watch"])
+
 
 with per60_tab:
     try:
-        skater_analytics = client.get_skater_analytics(limit=100)
+        skater_analytics = load_skater_analytics(100)
+        st.caption("Ranked among the league's top 100 point-scorers, not every skater.")
 
         if skater_analytics:
             per60_records = [
@@ -238,69 +257,81 @@ with per60_tab:
     except Exception as exc:
         st.warning(f"Could not load per-60 data: {exc}")
 
+
 with regression_tab:
     st.markdown(
-        "Players whose shooting percentage is **≥ 1.5× their career / league-average xG%** "
-        "are likely due for regression. Players below **0.7×** are potential positive "
-        "regression candidates."
+        "Lists players whose goals are **unlikely to be luck alone**, judged against the "
+        "league's goals-per-shot for their position group (forwards and defensemen are "
+        "compared separately). A hot or cold streak is not a forecast: shooting skill is real, "
+        "so the **Projected S%** column pulls each player's rate back toward the position "
+        "average only as far as their shot count justifies."
     )
-    LEAGUE_AVG_SHOOT_PCT = 0.092  # ~9.2% league average shooting pct
 
     try:
-        skaters = client.get_skater_stats(limit=200)
+        skaters = load_skaters("points", LEAGUE_POOL)
 
         if skaters:
-            regression_rows = []
-            for p in skaters:
-                shoot_pct_raw = p.get("shooting_pct")
-                if shoot_pct_raw is None:
-                    continue
-                # shooting_pct comes back as percentage (e.g. 14.5 means 14.5%)
-                shoot_pct = shoot_pct_raw / 100.0 if shoot_pct_raw > 1.0 else shoot_pct_raw
-                if p.get("shots", 0) < 20:
-                    continue  # too small a sample
-
-                ratio = shoot_pct / LEAGUE_AVG_SHOOT_PCT
-                if ratio >= 1.5 or ratio <= 0.7:
-                    regression_rows.append({
-                        "Player": p["name"],
-                        "Team": client.TEAM_NAMES.get(p.get("team", ""), p.get("team", "")),
-                        "GP": p.get("games", 0),
-                        "Goals": p.get("goals", 0),
-                        "Shots": p.get("shots", 0),
-                        "S%": f"{shoot_pct*100:.1f}%",
-                        "Lg Avg S%": f"{LEAGUE_AVG_SHOOT_PCT*100:.1f}%",
-                        "Ratio": round(ratio, 2),
-                        "Signal": "🔴 Due to cool off" if ratio >= 1.5 else "🟢 Positive regression cand.",
-                    })
+            result = regression_candidates(skaters)
+            baselines = result["baselines"]
+            regression_rows = [
+                {
+                    "Player": r["name"],
+                    "Team": client.TEAM_NAMES.get(r["team"] or "", r["team"]),
+                    "Pos": r["position"],
+                    "GP": r["games"],
+                    "Goals": r["goals"],
+                    "Shots": r["shots"],
+                    "S%": f"{r['shooting_pct'] * 100:.1f}%",
+                    "Pos Avg S%": f"{r['baseline_pct'] * 100:.1f}%",
+                    "Expected Goals": round(r["expected_goals"], 1),
+                    "Goals vs Exp": round(r["goals"] - r["expected_goals"], 1),
+                    "Luck Odds": f"{r['p_value']:.2%}",
+                    "Projected S%": f"{r['shrunk_pct'] * 100:.1f}%",
+                    "Signal": "🔴 Running hot" if r["signal"] == "hot" else "🔵 Running cold",
+                }
+                for r in result["rows"]
+            ]
 
             if regression_rows:
-                reg_df = (
-                    pd.DataFrame(regression_rows)
-                    .sort_values("Ratio", ascending=False)
-                    .reset_index(drop=True)
+                st.dataframe(pd.DataFrame(regression_rows), hide_index=True, width="stretch")
+                st.caption(
+                    "Luck Odds is the chance a typical player of that position would do this "
+                    "well (or this badly) on the same shots."
                 )
-                st.dataframe(reg_df, hide_index=True, width="stretch")
             else:
-                st.success("No strong regression candidates at this time.")
+                st.success(
+                    "No player stands out beyond luck yet. That is normal early in the season, "
+                    "when shot counts are small."
+                )
+            st.caption(
+                f"Position averages from {len(skaters)} skaters: "
+                + ", ".join(
+                    f"{'Forwards' if g == 'F' else 'Defensemen'} {v * 100:.1f}%"
+                    for g, v in sorted(baselines.items())
+                )
+            )
         else:
-            st.info("No skater data available for regression analysis.")
+            st.info("No skater data available for this analysis.")
     except Exception as exc:
-        st.warning(f"Could not load regression data: {exc}")
+        st.warning(f"Could not load shooting luck data: {exc}")
 
-    with st.expander("How regression watch works"):
+    with st.expander("How the luck watch works"):
         st.markdown(f"""
-        **Rule of thumb:**
-        - Shooting% ≥ **{LEAGUE_AVG_SHOOT_PCT*1.5*100:.0f}%** (1.5× league avg {LEAGUE_AVG_SHOOT_PCT*100:.1f}%): 
-          Player is likely riding hot goaltending luck or unsustainable heat — expect fewer goals soon.
-        - Shooting% ≤ **{LEAGUE_AVG_SHOOT_PCT*0.7*100:.1f}%** (0.7× league avg): 
-          Player may be running cold; goals likely coming once shooting luck normalises.
-        
-        This is most useful for **prop bets on goal totals** — a player at 19% shooting will 
-        almost always cool off, making the "Over" on his goals props risky.
-        
-        Players with fewer than 20 shots are excluded (sample too small).
+        **Method:**
+        - Each player's expected goals are their shots times the league's goals-per-shot for
+          their position group, measured from all skaters on this page's data.
+        - A player is listed only if the chance of a result this extreme is at most
+          **{ALPHA:.0%}** (exact binomial test) and they have at least **{MIN_SHOTS}** shots.
+        - **Projected S%** blends the player's own rate with the position average, treating the
+          average as worth **{PRIOR_SHOTS}** shots of evidence. That weight is an assumption,
+          not a measured constant.
+
+        **How to use it:** a flagged player is more likely than not to score less (or more) than
+        his rate so far, but not all the way back to average, since finishing skill exists. With
+        hundreds of skaters checked, a few will be flagged by chance alone. Treat it as a
+        reason to look closer at a goals prop, not as a bet signal by itself.
         """)
+
 
 # Add footer
 add_betting_oracle_footer()
