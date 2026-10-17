@@ -255,7 +255,7 @@ def segment_rows(report: dict) -> List[dict]:
             'Segment': SEGMENT_LABELS.get(name, name),
             'Games compared': probs['n'],
             'Log loss: model (raw)': _log_loss(probs.get('p_raw')),
-            'Log loss: model (blended)': _log_loss(probs.get('p_used')),
+            'Log loss: model (shrunk toward market)': _log_loss(probs.get('p_used')),
             'Log loss: market': _log_loss(probs.get('p_market')),
             'Simulated bets': bets.get('n', 0),
             'Win rate': _text(bets.get('hit_rate') if has_bets else None, '.1%'),
@@ -267,13 +267,32 @@ def segment_rows(report: dict) -> List[dict]:
     return rows
 
 
-def verdict(report: dict) -> str:
+def _gap_verdict(gap: dict) -> str:
+    '''Verdict from the model-minus-market log loss gap and its 95% range.'''
+    spread = f"{gap['mean']:+.4f} (95% range {gap['low']:+.4f} to {gap['high']:+.4f})"
+    head = (
+        f"Across {gap['n']} games the model, shrunk toward the market, differs from the market by "
+        f"{spread} log loss; positive means worse. "
+    )
+    if gap['low'] > 0:
+        return head + 'The market is doing better, and the gap is larger than chance.'
+    if gap['high'] < 0:
+        return head + 'The model is doing better, and the gap is larger than chance.'
+    return head + (
+        'No detectable difference yet: the range includes zero, so these games cannot tell '
+        'the model and the market apart.'
+    )
+
+
+def verdict(report: dict, gap: Optional[dict] = None) -> str:
     '''Plain-language comparison of the blended model against the market.'''
     probs = report['overall']['probabilities']
     count = probs['n']
     blended, market = probs.get('p_used'), probs.get('p_market')
     if not count or blended is None or market is None:
         return 'No games with full model and market probabilities yet.'
+    if gap is not None:
+        return _gap_verdict(gap)
     diff = market['log_loss'] - blended['log_loss']
     if count < MIN_GAMES:
         return (

@@ -12,6 +12,7 @@ from footer import add_betting_oracle_footer
 from src.utils.odds_storage import get_game_odds_history
 from src.utils.totals_puckline import grade_games, summarize
 from src.utils.daily_goals import daily_goal_projection
+from src.utils.gap_stats import gap_summary, log_loss_gaps
 from src.utils.performance import (
     STAKE, daily_summary, day_summary, ledger_totals, load_final_scores, load_pick_log,
     load_scorecard, money, pick_ledger, picks_for_date, segment_rows, verdict,
@@ -116,7 +117,7 @@ else:
     col2.metric('Scored', report['games_scored'])
     col3.metric('Waiting on results', report['games_pending'])
 
-    st.write(verdict(report))
+    st.write(verdict(report, gap=gap_summary(log_loss_gaps(entries, scores))))
     st.dataframe(pd.DataFrame(segment_rows(report)), width='stretch', hide_index=True)
 
     st.caption(

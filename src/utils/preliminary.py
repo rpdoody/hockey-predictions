@@ -67,7 +67,7 @@ def display_rows(rows: List[dict]) -> List[dict]:
             'Start': item['game_time'],
             'Market home win %': _num(item['market_home'], '.1%'),
             'Model home win % (raw)': _num(item['model_raw_home'], '.1%'),
-            'Model home win % (blended)': _num(item['model_used_home'], '.1%'),
+            'Model home win % (shrunk toward market)': _num(item['model_used_home'], '.1%'),
             'Gap vs market': 'n/a' if gap is None else f'{gap * 100:+.1f} pts',
             'Expected total': _num(item['expected_total'], '.2f'),
             'Market total': _num(item['market_total'], '.1f'),

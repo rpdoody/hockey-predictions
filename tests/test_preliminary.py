@@ -45,7 +45,7 @@ def test_display_rows_format_and_handle_missing_odds():
         _row('B', '2026-10-08T07:00:00+00:00', 0.53, home_ml=None, away_ml=None),
     ]
     table = display_rows(preliminary_rows(rows, '2026-10-08'))
-    assert table[0]['Model home win % (blended)'] == '53.0%'
+    assert table[0]['Model home win % (shrunk toward market)'] == '53.0%'
     assert table[0]['Gap vs market'] == '+3.0 pts'
     assert table[1]['Market home win %'] == 'n/a'
     assert table[1]['Gap vs market'] == 'n/a'
