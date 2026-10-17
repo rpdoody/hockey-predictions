@@ -248,6 +248,7 @@ pg = st.navigation(
             st.Page("pages/7_Goalies.py", title="Goalies", icon="🥅"),
             st.Page("pages/8_Injuries.py", title="Injuries", icon="🏥"),
             st.Page("pages/9_Line_Movement.py", title="Line Movement", icon="📉"),
+            st.Page("pages/12_Shots_Edge.py", title="Shots Edge", icon="🎯"),
         ],
         "Models": [
             st.Page("pages/10_Model_Performance.py", title="Model Performance", icon="📊"),
