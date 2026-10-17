@@ -29,6 +29,7 @@ from src.models.expected_goals import (
 )
 from src.models.blend_projection import blend_projection
 from src.models.win_probability import calculate_win_probability
+from src.models.gap_stretch import stretched_fields
 from src.utils.pick_log import append_pick_log, source_version
 from src.utils.season import current_season_id, to_eastern
 
@@ -316,6 +317,7 @@ def main() -> None:
             "away_ml":            away_ml,
             **blend_fields,
             **prior_reference,
+            **stretched_fields(home_xg, away_xg),
         })
 
         # ── 5. Edge calculation ──────────────────────────────────────
