@@ -1,6 +1,8 @@
 """NHL API client with caching and error handling."""
+import hashlib
 import httpx
 import json
+from urllib.parse import quote
 from pathlib import Path
 from datetime import datetime, timedelta, date
 from typing import Any, Optional
@@ -18,6 +20,14 @@ class NHLClient:
     CACHE_DIR = Path("data_files/cache")
     SKATER_SORTS = ("points", "goals", "assists", "shots")
     GOALIE_SORTS = ("wins", "saves", "savePct")
+
+    @staticmethod
+    def _sort_param(prop: str) -> str:
+        """URL-encoded sort clause in the JSON form the NHL stats API honours.
+
+        A plain `sort=field` plus separate direction parameter is silently ignored by the API.
+        """
+        return quote(json.dumps([{"property": prop, "direction": "DESC"}], separators=(",", ":")))
     
     # Team abbreviation to ID mapping
     TEAM_ID_MAP = {
@@ -68,7 +78,10 @@ class NHLClient:
         # Create safe filename from URL
         safe_name = url.replace("https://", "").replace("/", "_").replace("?", "_").replace(":", "_")
         # Limit filename length
-        safe_name = safe_name[-100:] if len(safe_name) > 100 else safe_name
+        if len(safe_name) > 100:
+            # Keep a readable tail plus a hash so URLs that differ early (e.g. limit) never collide
+            digest = hashlib.sha1(url.encode()).hexdigest()[:12]
+            safe_name = f"{safe_name[-80:]}_{digest}"
         return self.CACHE_DIR / f"{safe_name}.json"
     
     def _is_cache_valid(self, cache_path: Path, ttl: Optional[timedelta] = None) -> bool:
@@ -352,7 +365,7 @@ class NHLClient:
         url = (
             f"{self.BASE_STATS_API}/skater/summary"
             f"?limit={limit}&cayenneExp=seasonId={season}"
-            f"&sort={sort}&direction=DESC"
+            f"&sort={self._sort_param(sort)}"
         )
         data = self._fetch_sync(url)
         
@@ -391,7 +404,7 @@ class NHLClient:
         url = (
             f"{self.BASE_STATS_API}/goalie/summary"
             f"?limit={limit}&cayenneExp=seasonId={season}"
-            f"&sort={sort}&direction=DESC"
+            f"&sort={self._sort_param(sort)}"
         )
         data = self._fetch_sync(url)
         
@@ -600,7 +613,7 @@ class NHLClient:
         url = (
             f"{self.BASE_STATS_API}/goalie/advanced"
             f"?cayenneExp=seasonId={season}&limit={limit}"
-            f"&sort=gamesPlayed&direction=DESC"
+            f"&sort={self._sort_param('gamesPlayed')}"
         )
         data = self._fetch_sync(url)
 
@@ -642,7 +655,7 @@ class NHLClient:
         url = (
             f"{self.BASE_STATS_API}/skater/summary"
             f"?cayenneExp=seasonId={season}&limit={limit}"
-            f"&sort=points&direction=DESC"
+            f"&sort={self._sort_param('points')}"
         )
         data = self._fetch_sync(url)
 
