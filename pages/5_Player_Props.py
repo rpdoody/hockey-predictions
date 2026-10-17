@@ -23,7 +23,7 @@ def get_client():
 
 client = get_client()
 
-LEAGUE_POOL = 1000  # large enough to cover every skater with a game played
+LEAGUE_POOL = -1  # -1 asks the API for every skater
 SORT_KEYS = {"Points": "points", "Goals": "goals", "Assists": "assists", "Shots": "shots"}
 
 
