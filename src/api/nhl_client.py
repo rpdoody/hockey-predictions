@@ -16,6 +16,8 @@ class NHLClient:
     BASE_STATS_API = "https://api.nhle.com/stats/rest/en"
     ESPN_SCORES_API = "https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard"
     CACHE_DIR = Path("data_files/cache")
+    SKATER_SORTS = ("points", "goals", "assists", "shots")
+    GOALIE_SORTS = ("wins", "saves", "savePct")
     
     # Team abbreviation to ID mapping
     TEAM_ID_MAP = {
@@ -333,9 +335,9 @@ class NHLClient:
     # Player Endpoints
     # -------------------------------------------------------------------------
     
-    def get_skater_stats(self, season: Optional[str] = None, limit: int = 100) -> list[dict]:
+    def get_skater_stats(self, season: Optional[str] = None, limit: int = 100, sort: str = "points") -> list[dict]:
         """
-        Get top skaters by points.
+        Get top skaters ranked by `sort` (points, goals, assists or shots).
         
         Args:
             season: Season ID; defaults to display_season()
@@ -344,11 +346,13 @@ class NHLClient:
         Returns:
             List of skater stats
         """
+        if sort not in self.SKATER_SORTS:
+            raise ValueError(f"Unsupported skater sort: {sort}")
         season = season or self.display_season()
         url = (
             f"{self.BASE_STATS_API}/skater/summary"
             f"?limit={limit}&cayenneExp=seasonId={season}"
-            f"&sort=points&direction=DESC"
+            f"&sort={sort}&direction=DESC"
         )
         data = self._fetch_sync(url)
         
@@ -370,7 +374,7 @@ class NHLClient:
             for p in data.get("data", [])
         ]
     
-    def get_goalie_stats(self, season: Optional[str] = None, limit: int = 50) -> list[dict]:
+    def get_goalie_stats(self, season: Optional[str] = None, limit: int = 50, sort: str = "wins") -> list[dict]:
         """
         Get goalie statistics.
         
@@ -381,11 +385,13 @@ class NHLClient:
         Returns:
             List of goalie stats
         """
+        if sort not in self.GOALIE_SORTS:
+            raise ValueError(f"Unsupported goalie sort: {sort}")
         season = season or self.display_season()
         url = (
             f"{self.BASE_STATS_API}/goalie/summary"
             f"?limit={limit}&cayenneExp=seasonId={season}"
-            f"&sort=wins&direction=DESC"
+            f"&sort={sort}&direction=DESC"
         )
         data = self._fetch_sync(url)
         
