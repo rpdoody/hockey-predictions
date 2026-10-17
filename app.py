@@ -142,6 +142,18 @@ with col3:
     if st.button("View Performance", key="perf_btn"):
         st.switch_page("pages/6_Performance.py")
 
+# Third row of features
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    st.markdown("### 🎯 Shots Edge")
+    st.markdown("""
+    Shots on goal props: model probability
+    against DraftKings and FanDuel lines.
+    """)
+    if st.button("Shots Edge", key="shots_edge_btn"):
+        st.switch_page("pages/12_Shots_Edge.py")
+
 st.divider()
 
 # Today's featured games (if available)
