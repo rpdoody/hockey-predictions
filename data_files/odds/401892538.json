@@ -1,0 +1,20 @@
+{
+  "game_id": "401892538",
+  "home_team": "UTA",
+  "away_team": "PIT",
+  "start_time": "2026-10-20T01:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-10-18T19:08:02+00:00",
+      "provider": "DraftKings",
+      "home_ml": -185,
+      "away_ml": 154,
+      "total": 6.5,
+      "over_odds": -120,
+      "under_odds": 100,
+      "home_pl_odds": 136,
+      "away_pl_odds": -162,
+      "home_pl_line": -1.5
+    }
+  ]
+}
