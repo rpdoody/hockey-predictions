@@ -1,51 +1,51 @@
 {
   "which": "last",
   "min_edge": 0.03,
-  "games_logged": 178,
-  "games_scored": 119,
-  "games_pending": 59,
+  "games_logged": 183,
+  "games_scored": 133,
+  "games_pending": 50,
   "overall": {
     "probabilities": {
-      "n": 118,
+      "n": 132,
       "p_raw": {
-        "brier": 0.2345,
-        "log_loss": 0.6617
+        "brier": 0.232,
+        "log_loss": 0.6567
       },
       "p_used": {
-        "brier": 0.2314,
-        "log_loss": 0.655
+        "brier": 0.2288,
+        "log_loss": 0.6498
       },
       "p_market": {
-        "brier": 0.2298,
-        "log_loss": 0.6512
+        "brier": 0.2273,
+        "log_loss": 0.6458
       }
     },
     "bets": {
-      "n": 12,
-      "wins": 5,
-      "hit_rate": 0.4167,
-      "units": -0.85,
-      "roi": -0.0708,
-      "avg_edge": 0.0363,
-      "clv_n": 12,
-      "avg_clv": -0.0051
+      "n": 15,
+      "wins": 6,
+      "hit_rate": 0.4,
+      "units": -1.71,
+      "roi": -0.114,
+      "avg_edge": 0.0365,
+      "clv_n": 15,
+      "avg_clv": -0.003
     }
   },
   "by_segment": {
     "prior_only": {
       "probabilities": {
-        "n": 71,
+        "n": 72,
         "p_raw": {
-          "brier": 0.2369,
-          "log_loss": 0.6664
+          "brier": 0.2372,
+          "log_loss": 0.667
         },
         "p_used": {
-          "brier": 0.2338,
-          "log_loss": 0.6599
+          "brier": 0.2344,
+          "log_loss": 0.6613
         },
         "p_market": {
-          "brier": 0.2321,
-          "log_loss": 0.6562
+          "brier": 0.2331,
+          "log_loss": 0.6582
         }
       },
       "bets": {
@@ -61,31 +61,31 @@
     },
     "early": {
       "probabilities": {
-        "n": 47,
+        "n": 60,
         "p_raw": {
-          "brier": 0.2308,
-          "log_loss": 0.6545
+          "brier": 0.2258,
+          "log_loss": 0.6443
         },
         "p_used": {
-          "brier": 0.2277,
-          "log_loss": 0.6476
+          "brier": 0.2221,
+          "log_loss": 0.636
         },
         "p_market": {
-          "brier": 0.2263,
-          "log_loss": 0.6437
+          "brier": 0.2202,
+          "log_loss": 0.6309
         }
       },
       "bets": {
-        "n": 7,
-        "wins": 2,
-        "hit_rate": 0.2857,
-        "units": -2.28,
-        "roi": -0.3257,
-        "avg_edge": 0.0392,
-        "clv_n": 7,
-        "avg_clv": -0.0024
+        "n": 10,
+        "wins": 3,
+        "hit_rate": 0.3,
+        "units": -3.14,
+        "roi": -0.314,
+        "avg_edge": 0.0386,
+        "clv_n": 10,
+        "avg_clv": 0.0
       }
     }
   },
-  "generated_at": "2026-10-17T13:51:40+00:00"
+  "generated_at": "2026-10-18T12:19:31+00:00"
 }
