@@ -1,0 +1,20 @@
+{
+  "game_id": "401892547",
+  "home_team": "SEA",
+  "away_team": "DET",
+  "start_time": "2026-10-21T01:40Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-10-19T21:19:13+00:00",
+      "provider": "DraftKings",
+      "home_ml": -118,
+      "away_ml": -102,
+      "total": 6.5,
+      "over_odds": 100,
+      "under_odds": -120,
+      "home_pl_odds": 205,
+      "away_pl_odds": -250,
+      "home_pl_line": -1.5
+    }
+  ]
+}

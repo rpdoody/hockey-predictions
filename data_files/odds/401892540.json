@@ -1,0 +1,20 @@
+{
+  "game_id": "401892540",
+  "home_team": "NJD",
+  "away_team": "COL",
+  "start_time": "2026-10-20T23:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-10-19T21:19:13+00:00",
+      "provider": "DraftKings",
+      "home_ml": -105,
+      "away_ml": -115,
+      "total": 6.5,
+      "over_odds": 105,
+      "under_odds": -125,
+      "home_pl_odds": 215,
+      "away_pl_odds": -265,
+      "home_pl_line": -1.5
+    }
+  ]
+}

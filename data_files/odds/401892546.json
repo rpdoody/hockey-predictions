@@ -1,0 +1,20 @@
+{
+  "game_id": "401892546",
+  "home_team": "EDM",
+  "away_team": "MIN",
+  "start_time": "2026-10-21T01:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-10-19T21:19:13+00:00",
+      "provider": "DraftKings",
+      "home_ml": -130,
+      "away_ml": 110,
+      "total": 6.5,
+      "over_odds": 100,
+      "under_odds": -120,
+      "home_pl_odds": 180,
+      "away_pl_odds": -218,
+      "home_pl_line": -1.5
+    }
+  ]
+}
