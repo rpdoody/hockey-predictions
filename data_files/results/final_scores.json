@@ -678,5 +678,25 @@
     "away_goals": 1,
     "home_goals": 2,
     "period_type": "REG"
+  },
+  "2026-10-19|NYR|ANA": {
+    "away_goals": 2,
+    "home_goals": 5,
+    "period_type": "REG"
+  },
+  "2026-10-19|PHI|COL": {
+    "away_goals": 2,
+    "home_goals": 3,
+    "period_type": "REG"
+  },
+  "2026-10-19|TOR|SJS": {
+    "away_goals": 1,
+    "home_goals": 3,
+    "period_type": "REG"
+  },
+  "2026-10-19|UTA|PIT": {
+    "away_goals": 4,
+    "home_goals": 5,
+    "period_type": "REG"
   }
 }
