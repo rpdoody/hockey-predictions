@@ -1,0 +1,20 @@
+{
+  "game_id": "401892559",
+  "home_team": "DAL",
+  "away_team": "WPG",
+  "start_time": "2026-10-23T00:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-10-21T20:25:48+00:00",
+      "provider": "Draft Kings",
+      "home_ml": -205,
+      "away_ml": 170,
+      "total": 5.5,
+      "over_odds": -122,
+      "under_odds": 102,
+      "home_pl_odds": 130,
+      "away_pl_odds": -155,
+      "home_pl_line": -1.5
+    }
+  ]
+}

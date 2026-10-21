@@ -1,0 +1,20 @@
+{
+  "game_id": "401892561",
+  "home_team": "EDM",
+  "away_team": "CAR",
+  "start_time": "2026-10-23T01:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-10-21T20:25:48+00:00",
+      "provider": "Draft Kings",
+      "home_ml": -102,
+      "away_ml": -118,
+      "total": 6.5,
+      "over_odds": -105,
+      "under_odds": -115,
+      "home_pl_odds": -250,
+      "away_pl_odds": 205,
+      "home_pl_line": 1.5
+    }
+  ]
+}

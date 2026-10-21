@@ -1,0 +1,20 @@
+{
+  "game_id": "401892563",
+  "home_team": "VAN",
+  "away_team": "DET",
+  "start_time": "2026-10-23T02:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-10-21T20:25:48+00:00",
+      "provider": "Draft Kings",
+      "home_ml": 142,
+      "away_ml": -170,
+      "total": 6.5,
+      "over_odds": -105,
+      "under_odds": -115,
+      "home_pl_odds": -175,
+      "away_pl_odds": 145,
+      "home_pl_line": 1.5
+    }
+  ]
+}

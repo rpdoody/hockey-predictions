@@ -1,0 +1,20 @@
+{
+  "game_id": "401892555",
+  "home_team": "NJD",
+  "away_team": "ANA",
+  "start_time": "2026-10-22T23:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-10-21T20:25:48+00:00",
+      "provider": "Draft Kings",
+      "home_ml": -198,
+      "away_ml": 164,
+      "total": 6.5,
+      "over_odds": -105,
+      "under_odds": -115,
+      "home_pl_odds": 130,
+      "away_pl_odds": -155,
+      "home_pl_line": -1.5
+    }
+  ]
+}
