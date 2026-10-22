@@ -10,7 +10,7 @@ import streamlit as st
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from footer import add_betting_oracle_footer
 from src.utils.odds_storage import get_game_odds_history
-from src.utils.totals_puckline import grade_games, summarize
+from src.utils.totals_puckline import grade_games, summarize, MIN_EDGE
 from src.utils.totals_diagnostics import blend_weight, calibration_table, total_bias, tune_goal_scale
 from src.utils.daily_goals import daily_goal_projection
 from src.utils.gap_stats import gap_summary, log_loss_gaps
@@ -136,6 +136,29 @@ market_rows = grade_games(entries, scores, get_game_odds_history)
 market_table = summarize(market_rows)
 waiting = sum(r['status'] == 'pending' for r in market_rows)
 unclear = sum(r['status'] == 'ungradable' for r in market_rows)
+
+st.markdown('**Upcoming (before the game)**')
+today = datetime.now(ZoneInfo('America/New_York')).date().isoformat()
+EARLY_STAGES = ('Under 20', 'Last-season')
+upcoming = sorted(
+    (r for r in market_rows
+     if r['status'] == 'pending' and r['date'] >= today
+     and r['edge'] >= (0.05 if r['stage'].startswith(EARLY_STAGES) else MIN_EDGE)),
+    key=lambda r: (r['date'], -r['edge']),
+)
+if upcoming:
+    st.dataframe(pd.DataFrame([{
+        'Date': r['date'], 'Game': r['game'], 'Market': r['market'], 'Bet': r['bet_side'],
+        'Line': r['line'], 'Line source': r['line_source'], 'Odds': format(r['bet_odds'], '+d'),
+        'Edge': format(r['edge'], '+.1%'), 'Stage': r['stage'],
+    } for r in upcoming]), width='stretch', hide_index=True)
+    st.caption(
+        'Simulated and unvalidated. Odds come from the last snapshot saved when the pick was logged, so confirm '
+        'the current line and price before betting. Rows built on last-season ratings or under 20 games need a 5% edge.'
+    )
+else:
+    st.info('No upcoming totals or puck-line bets meet the edge threshold yet.')
+
 if not market_table:
     st.info('No graded totals or puck lines yet. This fills in once games with saved odds have final scores.')
 else:
@@ -151,7 +174,7 @@ else:
     )
     placed = [r for r in market_rows if r['bet_result']]
     if placed:
-        with st.expander('Bets placed ({})'.format(len(placed))):
+        with st.expander('Simulated bets ({})'.format(len(placed))):
             st.dataframe(pd.DataFrame([{
                 'Date': r['date'], 'Game': r['game'], 'Market': r['market'], 'Line': r['line'],
                 'Line source': r['line_source'], 'Bet': r['bet_side'], 'Odds': format(r['bet_odds'], '+d'),
