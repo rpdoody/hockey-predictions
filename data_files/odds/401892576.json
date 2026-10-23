@@ -1,0 +1,20 @@
+{
+  "game_id": "401892576",
+  "home_team": "CGY",
+  "away_team": "DET",
+  "start_time": "2026-10-25T02:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-10-23T20:10:17+00:00",
+      "provider": "DraftKings",
+      "home_ml": 124,
+      "away_ml": -148,
+      "total": 5.5,
+      "over_odds": -125,
+      "under_odds": 105,
+      "home_pl_odds": -205,
+      "away_pl_odds": 170,
+      "home_pl_line": 1.5
+    }
+  ]
+}

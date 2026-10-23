@@ -1,0 +1,20 @@
+{
+  "game_id": "401892567",
+  "home_team": "NJD",
+  "away_team": "LAK",
+  "start_time": "2026-10-24T19:30Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-10-23T20:10:17+00:00",
+      "provider": "DraftKings",
+      "home_ml": -166,
+      "away_ml": 140,
+      "total": 5.5,
+      "over_odds": -130,
+      "under_odds": 110,
+      "home_pl_odds": 150,
+      "away_pl_odds": -180,
+      "home_pl_line": -1.5
+    }
+  ]
+}
