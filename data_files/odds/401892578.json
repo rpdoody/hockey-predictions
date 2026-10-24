@@ -1,0 +1,20 @@
+{
+  "game_id": "401892578",
+  "home_team": "CHI",
+  "away_team": "FLA",
+  "start_time": "2026-10-25T19:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-10-24T15:07:56+00:00",
+      "provider": "Draft Kings",
+      "home_ml": 150,
+      "away_ml": -180,
+      "total": 6.5,
+      "over_odds": -105,
+      "under_odds": -115,
+      "home_pl_odds": -155,
+      "away_pl_odds": 130,
+      "home_pl_line": 1.5
+    }
+  ]
+}
