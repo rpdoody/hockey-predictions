@@ -1,0 +1,20 @@
+{
+  "game_id": "401892583",
+  "home_team": "CGY",
+  "away_team": "TOR",
+  "start_time": "2026-10-27T00:30Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-10-25T19:24:54+00:00",
+      "provider": "DraftKings",
+      "home_ml": 136,
+      "away_ml": -162,
+      "total": 6.5,
+      "over_odds": -125,
+      "under_odds": 105,
+      "home_pl_odds": -180,
+      "away_pl_odds": 150,
+      "home_pl_line": 1.5
+    }
+  ]
+}
