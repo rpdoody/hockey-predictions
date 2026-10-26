@@ -1,0 +1,20 @@
+{
+  "game_id": "401892588",
+  "home_team": "STL",
+  "away_team": "MTL",
+  "start_time": "2026-10-28T00:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-10-26T21:17:10+00:00",
+      "provider": "DraftKings",
+      "home_ml": -118,
+      "away_ml": -102,
+      "total": 6.5,
+      "over_odds": 110,
+      "under_odds": -130,
+      "home_pl_odds": 205,
+      "away_pl_odds": -250,
+      "home_pl_line": -1.5
+    }
+  ]
+}
