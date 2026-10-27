@@ -918,5 +918,20 @@
     "away_goals": 2,
     "home_goals": 1,
     "period_type": "REG"
+  },
+  "2026-10-26|CGY|TOR": {
+    "away_goals": 2,
+    "home_goals": 5,
+    "period_type": "REG"
+  },
+  "2026-10-26|EDM|DET": {
+    "away_goals": 4,
+    "home_goals": 3,
+    "period_type": "SO"
+  },
+  "2026-10-26|NYR|LAK": {
+    "away_goals": 6,
+    "home_goals": 3,
+    "period_type": "REG"
   }
 }
