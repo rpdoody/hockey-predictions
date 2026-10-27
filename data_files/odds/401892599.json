@@ -1,0 +1,20 @@
+{
+  "game_id": "401892599",
+  "home_team": "SEA",
+  "away_team": "TOR",
+  "start_time": "2026-10-29T02:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-10-27T21:04:13+00:00",
+      "provider": "DraftKings",
+      "home_ml": -105,
+      "away_ml": -115,
+      "total": 6.5,
+      "over_odds": -120,
+      "under_odds": 100,
+      "home_pl_odds": -238,
+      "away_pl_odds": 195,
+      "home_pl_line": 1.5
+    }
+  ]
+}
