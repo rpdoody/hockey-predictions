@@ -1,0 +1,20 @@
+{
+  "game_id": "401892606",
+  "home_team": "DAL",
+  "away_team": "MTL",
+  "start_time": "2026-10-30T00:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-10-28T17:04:34+00:00",
+      "provider": "DraftKings",
+      "home_ml": -162,
+      "away_ml": 136,
+      "total": 5.5,
+      "over_odds": -142,
+      "under_odds": 120,
+      "home_pl_odds": 154,
+      "away_pl_odds": -185,
+      "home_pl_line": -1.5
+    }
+  ]
+}
