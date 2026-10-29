@@ -988,5 +988,25 @@
     "away_goals": 5,
     "home_goals": 1,
     "period_type": "REG"
+  },
+  "2026-10-28|COL|NJD": {
+    "away_goals": 2,
+    "home_goals": 5,
+    "period_type": "REG"
+  },
+  "2026-10-28|EDM|CGY": {
+    "away_goals": 0,
+    "home_goals": 4,
+    "period_type": "REG"
+  },
+  "2026-10-28|SEA|TOR": {
+    "away_goals": 4,
+    "home_goals": 5,
+    "period_type": "REG"
+  },
+  "2026-10-28|WSH|PHI": {
+    "away_goals": 2,
+    "home_goals": 5,
+    "period_type": "REG"
   }
 }
