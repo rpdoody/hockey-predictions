@@ -1063,5 +1063,20 @@
     "away_goals": 4,
     "home_goals": 6,
     "period_type": "REG"
+  },
+  "2026-10-30|CGY|SEA": {
+    "away_goals": 2,
+    "home_goals": 6,
+    "period_type": "REG"
+  },
+  "2026-10-30|FLA|WPG": {
+    "away_goals": 2,
+    "home_goals": 5,
+    "period_type": "REG"
+  },
+  "2026-10-30|VGK|NJD": {
+    "away_goals": 5,
+    "home_goals": 2,
+    "period_type": "REG"
   }
 }
