@@ -1,34 +1,34 @@
 {
   "which": "last",
   "min_edge": 0.03,
-  "games_logged": 275,
-  "games_scored": 215,
-  "games_pending": 60,
+  "games_logged": 281,
+  "games_scored": 225,
+  "games_pending": 56,
   "overall": {
     "probabilities": {
-      "n": 214,
+      "n": 224,
       "p_raw": {
-        "brier": 0.2386,
-        "log_loss": 0.67
+        "brier": 0.2373,
+        "log_loss": 0.6673
       },
       "p_used": {
-        "brier": 0.2344,
-        "log_loss": 0.6612
+        "brier": 0.2327,
+        "log_loss": 0.6578
       },
       "p_market": {
-        "brier": 0.2318,
-        "log_loss": 0.6554
+        "brier": 0.2298,
+        "log_loss": 0.6512
       }
     },
     "bets": {
-      "n": 21,
+      "n": 22,
       "wins": 7,
-      "hit_rate": 0.3333,
-      "units": -5.29,
-      "roi": -0.2519,
+      "hit_rate": 0.3182,
+      "units": -6.29,
+      "roi": -0.2859,
       "avg_edge": 0.0372,
-      "clv_n": 21,
-      "avg_clv": -0.0031
+      "clv_n": 22,
+      "avg_clv": -0.0024
     }
   },
   "by_segment": {
@@ -61,31 +61,31 @@
     },
     "early": {
       "probabilities": {
-        "n": 137,
+        "n": 147,
         "p_raw": {
-          "brier": 0.2382,
-          "log_loss": 0.6694
+          "brier": 0.2363,
+          "log_loss": 0.6653
         },
         "p_used": {
-          "brier": 0.2338,
-          "log_loss": 0.6601
+          "brier": 0.2313,
+          "log_loss": 0.655
         },
         "p_market": {
-          "brier": 0.2308,
-          "log_loss": 0.6534
+          "brier": 0.2278,
+          "log_loss": 0.6472
         }
       },
       "bets": {
-        "n": 13,
+        "n": 14,
         "wins": 3,
-        "hit_rate": 0.2308,
-        "units": -6.14,
-        "roi": -0.4723,
-        "avg_edge": 0.0371,
-        "clv_n": 13,
-        "avg_clv": -0.0016
+        "hit_rate": 0.2143,
+        "units": -7.14,
+        "roi": -0.51,
+        "avg_edge": 0.0372,
+        "clv_n": 14,
+        "avg_clv": -0.0006
       }
     }
   },
-  "generated_at": "2026-10-31T10:34:16+00:00"
+  "generated_at": "2026-11-01T10:34:18+00:00"
 }
