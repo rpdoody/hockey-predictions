@@ -1,0 +1,20 @@
+{
+  "game_id": "401892640",
+  "home_team": "WSH",
+  "away_team": "DAL",
+  "start_time": "2026-11-04T00:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-11-02T17:04:26+00:00",
+      "provider": "Draft Kings",
+      "home_ml": -112,
+      "away_ml": -108,
+      "total": 5.5,
+      "over_odds": -120,
+      "under_odds": 100,
+      "home_pl_odds": 205,
+      "away_pl_odds": -250,
+      "home_pl_line": -1.5
+    }
+  ]
+}

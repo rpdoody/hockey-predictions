@@ -1,0 +1,20 @@
+{
+  "game_id": "401892637",
+  "home_team": "NYR",
+  "away_team": "STL",
+  "start_time": "2026-11-04T00:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-11-02T17:04:26+00:00",
+      "provider": "Draft Kings",
+      "home_ml": -125,
+      "away_ml": 105,
+      "total": 5.5,
+      "over_odds": -135,
+      "under_odds": 114,
+      "home_pl_odds": 195,
+      "away_pl_odds": -238,
+      "home_pl_line": -1.5
+    }
+  ]
+}

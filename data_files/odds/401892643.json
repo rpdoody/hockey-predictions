@@ -1,0 +1,20 @@
+{
+  "game_id": "401892643",
+  "home_team": "VAN",
+  "away_team": "ANA",
+  "start_time": "2026-11-04T02:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-11-02T17:04:26+00:00",
+      "provider": "Draft Kings",
+      "home_ml": 124,
+      "away_ml": -148,
+      "total": 6.5,
+      "over_odds": -118,
+      "under_odds": -102,
+      "home_pl_odds": -185,
+      "away_pl_odds": 154,
+      "home_pl_line": 1.5
+    }
+  ]
+}

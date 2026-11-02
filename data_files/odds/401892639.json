@@ -1,0 +1,20 @@
+{
+  "game_id": "401892639",
+  "home_team": "PIT",
+  "away_team": "VGK",
+  "start_time": "2026-11-04T00:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-11-02T17:04:26+00:00",
+      "provider": "Draft Kings",
+      "home_ml": -108,
+      "away_ml": -112,
+      "total": 6.5,
+      "over_odds": -125,
+      "under_odds": 105,
+      "home_pl_odds": -245,
+      "away_pl_odds": 200,
+      "home_pl_line": 1.5
+    }
+  ]
+}

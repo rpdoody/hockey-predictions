@@ -1,0 +1,20 @@
+{
+  "game_id": "401892638",
+  "home_team": "PHI",
+  "away_team": "MIN",
+  "start_time": "2026-11-04T00:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-11-02T17:04:26+00:00",
+      "provider": "Draft Kings",
+      "home_ml": 142,
+      "away_ml": -170,
+      "total": 5.5,
+      "over_odds": -125,
+      "under_odds": 105,
+      "home_pl_odds": -166,
+      "away_pl_odds": 140,
+      "home_pl_line": 1.5
+    }
+  ]
+}
