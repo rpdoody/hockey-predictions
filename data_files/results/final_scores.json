@@ -1153,5 +1153,25 @@
     "away_goals": 5,
     "home_goals": 1,
     "period_type": "REG"
+  },
+  "2026-11-02|BOS|VGK": {
+    "away_goals": 2,
+    "home_goals": 3,
+    "period_type": "SO"
+  },
+  "2026-11-02|CHI|COL": {
+    "away_goals": 5,
+    "home_goals": 2,
+    "period_type": "REG"
+  },
+  "2026-11-02|FLA|DET": {
+    "away_goals": 5,
+    "home_goals": 3,
+    "period_type": "REG"
+  },
+  "2026-11-02|SJS|CGY": {
+    "away_goals": 2,
+    "home_goals": 1,
+    "period_type": "REG"
   }
 }
