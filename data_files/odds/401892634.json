@@ -51,6 +51,18 @@
       "home_pl_odds": 142,
       "away_pl_odds": -170,
       "home_pl_line": -1.5
+    },
+    {
+      "timestamp": "2026-11-03T23:04:36+00:00",
+      "provider": "Draft Kings",
+      "home_ml": -166,
+      "away_ml": 140,
+      "total": 5.5,
+      "over_odds": -130,
+      "under_odds": 110,
+      "home_pl_odds": 142,
+      "away_pl_odds": -170,
+      "home_pl_line": -1.5
     }
   ]
 }
