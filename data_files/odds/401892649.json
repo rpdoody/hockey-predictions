@@ -1,0 +1,20 @@
+{
+  "game_id": "401892649",
+  "home_team": "DET",
+  "away_team": "VGK",
+  "start_time": "2026-11-06T00:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-11-04T17:04:12+00:00",
+      "provider": "DraftKings",
+      "home_ml": 120,
+      "away_ml": -142,
+      "total": 5.5,
+      "over_odds": -135,
+      "under_odds": 114,
+      "home_pl_odds": -218,
+      "away_pl_odds": 180,
+      "home_pl_line": 1.5
+    }
+  ]
+}
