@@ -1,0 +1,20 @@
+{
+  "game_id": "401892671",
+  "home_team": "COL",
+  "away_team": "DET",
+  "start_time": "2026-11-08T02:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-11-06T17:04:24+00:00",
+      "provider": "Draft Kings",
+      "home_ml": -225,
+      "away_ml": 185,
+      "total": 6.5,
+      "over_odds": 105,
+      "under_odds": -125,
+      "home_pl_odds": 105,
+      "away_pl_odds": -125,
+      "home_pl_line": -1.5
+    }
+  ]
+}

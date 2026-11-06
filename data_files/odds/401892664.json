@@ -1,0 +1,20 @@
+{
+  "game_id": "401892664",
+  "home_team": "SEA",
+  "away_team": "NYR",
+  "start_time": "2026-11-07T22:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-11-06T17:04:24+00:00",
+      "provider": "Draft Kings",
+      "home_ml": -102,
+      "away_ml": -118,
+      "total": 6.5,
+      "over_odds": 102,
+      "under_odds": -122,
+      "home_pl_odds": -238,
+      "away_pl_odds": 195,
+      "home_pl_line": 1.5
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "game_id": "401892666",
+  "home_team": "OTT",
+  "away_team": "UTA",
+  "start_time": "2026-11-08T00:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-11-06T17:04:24+00:00",
+      "provider": "Draft Kings",
+      "home_ml": -110,
+      "away_ml": -110,
+      "total": 6.5,
+      "over_odds": 105,
+      "under_odds": -125,
+      "home_pl_odds": 210,
+      "away_pl_odds": -258,
+      "home_pl_line": -1.5
+    }
+  ]
+}

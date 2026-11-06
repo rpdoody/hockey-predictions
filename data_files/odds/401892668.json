@@ -1,0 +1,20 @@
+{
+  "game_id": "401892668",
+  "home_team": "CAR",
+  "away_team": "CHI",
+  "start_time": "2026-11-08T01:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-11-06T17:04:24+00:00",
+      "provider": "Draft Kings",
+      "home_ml": -395,
+      "away_ml": 310,
+      "total": 6.5,
+      "over_odds": 114,
+      "under_odds": -135,
+      "home_pl_odds": -142,
+      "away_pl_odds": 120,
+      "home_pl_line": -1.5
+    }
+  ]
+}
