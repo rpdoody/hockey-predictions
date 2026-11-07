@@ -1,0 +1,20 @@
+{
+  "game_id": "401892675",
+  "home_team": "BUF",
+  "away_team": "VGK",
+  "start_time": "2026-11-08T20:30Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-11-07T17:04:05+00:00",
+      "provider": "DraftKings",
+      "home_ml": -108,
+      "away_ml": -112,
+      "total": 6.5,
+      "over_odds": -105,
+      "under_odds": -115,
+      "home_pl_odds": 200,
+      "away_pl_odds": -245,
+      "home_pl_line": -1.5
+    }
+  ]
+}
