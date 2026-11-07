@@ -1,23 +1,23 @@
 {
   "which": "last",
   "min_edge": 0.03,
-  "games_logged": 310,
-  "games_scored": 260,
-  "games_pending": 50,
+  "games_logged": 324,
+  "games_scored": 263,
+  "games_pending": 61,
   "overall": {
     "probabilities": {
-      "n": 259,
+      "n": 262,
       "p_raw": {
-        "brier": 0.2372,
-        "log_loss": 0.6672
+        "brier": 0.2367,
+        "log_loss": 0.666
       },
       "p_used": {
-        "brier": 0.2329,
-        "log_loss": 0.6582
+        "brier": 0.2324,
+        "log_loss": 0.657
       },
       "p_market": {
-        "brier": 0.2302,
-        "log_loss": 0.652
+        "brier": 0.2296,
+        "log_loss": 0.6507
       }
     },
     "bets": {
@@ -61,18 +61,18 @@
     },
     "early": {
       "probabilities": {
-        "n": 179,
+        "n": 182,
         "p_raw": {
-          "brier": 0.2368,
-          "log_loss": 0.6664
+          "brier": 0.236,
+          "log_loss": 0.6647
         },
         "p_used": {
-          "brier": 0.2317,
-          "log_loss": 0.6556
+          "brier": 0.2309,
+          "log_loss": 0.6539
         },
         "p_market": {
-          "brier": 0.228,
-          "log_loss": 0.6473
+          "brier": 0.2271,
+          "log_loss": 0.6456
         }
       },
       "bets": {
@@ -87,5 +87,5 @@
       }
     }
   },
-  "generated_at": "2026-11-06T10:34:56+00:00"
+  "generated_at": "2026-11-07T10:34:19+00:00"
 }

@@ -1303,5 +1303,20 @@
     "away_goals": 2,
     "home_goals": 6,
     "period_type": "REG"
+  },
+  "2026-11-06|BUF|CBJ": {
+    "away_goals": 2,
+    "home_goals": 5,
+    "period_type": "REG"
+  },
+  "2026-11-06|CGY|ANA": {
+    "away_goals": 5,
+    "home_goals": 3,
+    "period_type": "REG"
+  },
+  "2026-11-06|MIN|SJS": {
+    "away_goals": 1,
+    "home_goals": 4,
+    "period_type": "REG"
   }
 }
