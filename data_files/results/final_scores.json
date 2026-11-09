@@ -1378,5 +1378,35 @@
     "away_goals": 3,
     "home_goals": 4,
     "period_type": "REG"
+  },
+  "2026-11-08|ANA|PIT": {
+    "away_goals": 2,
+    "home_goals": 5,
+    "period_type": "REG"
+  },
+  "2026-11-08|BOS|FLA": {
+    "away_goals": 1,
+    "home_goals": 4,
+    "period_type": "REG"
+  },
+  "2026-11-08|BUF|VGK": {
+    "away_goals": 4,
+    "home_goals": 1,
+    "period_type": "REG"
+  },
+  "2026-11-08|CGY|PHI": {
+    "away_goals": 3,
+    "home_goals": 4,
+    "period_type": "OT"
+  },
+  "2026-11-08|TOR|NJD": {
+    "away_goals": 4,
+    "home_goals": 0,
+    "period_type": "REG"
+  },
+  "2026-11-08|WPG|TBL": {
+    "away_goals": 3,
+    "home_goals": 4,
+    "period_type": "REG"
   }
 }
