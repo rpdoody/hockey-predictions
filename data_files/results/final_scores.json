@@ -1408,5 +1408,20 @@
     "away_goals": 3,
     "home_goals": 4,
     "period_type": "REG"
+  },
+  "2026-11-09|EDM|NYR": {
+    "away_goals": 1,
+    "home_goals": 3,
+    "period_type": "REG"
+  },
+  "2026-11-09|SJS|NYI": {
+    "away_goals": 2,
+    "home_goals": 3,
+    "period_type": "SO"
+  },
+  "2026-11-09|VAN|PHI": {
+    "away_goals": 3,
+    "home_goals": 1,
+    "period_type": "REG"
   }
 }
