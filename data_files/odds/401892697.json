@@ -1,0 +1,20 @@
+{
+  "game_id": "401892697",
+  "home_team": "TOR",
+  "away_team": "MIN",
+  "start_time": "2026-11-13T00:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-11-11T17:04:28+00:00",
+      "provider": "DraftKings",
+      "home_ml": 124,
+      "away_ml": -148,
+      "total": 6.5,
+      "over_odds": -105,
+      "under_odds": -115,
+      "home_pl_odds": -205,
+      "away_pl_odds": 170,
+      "home_pl_line": 1.5
+    }
+  ]
+}
