@@ -1,10 +1,25 @@
 {
   "meta": {
     "sport": "NHL",
-    "generated_at": "2026-11-11T07:01:58.179635+00:00",
+    "generated_at": "2026-11-12T07:01:51.857376+00:00",
     "model_version": "1.0.0",
-    "season": "2026",
-    "notes": "No NHL picks for 2026-11-11"
+    "season": "2026"
   },
-  "bets": []
+  "bets": [
+    {
+      "game_date": "2026-11-12",
+      "game_time": "12:00 PM ET",
+      "game": "CAR @ SEA",
+      "home_team": "SEA",
+      "away_team": "CAR",
+      "bet_type": "Moneyline",
+      "pick": "SEA",
+      "confidence": 0.3475,
+      "edge": 0.0576,
+      "tier": "Strong",
+      "odds": "+245",
+      "line": null,
+      "notes": "Early blend (last season + this season)"
+    }
+  ]
 }
