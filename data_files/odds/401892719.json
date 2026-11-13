@@ -1,0 +1,20 @@
+{
+  "game_id": "401892719",
+  "home_team": "ANA",
+  "away_team": "NYI",
+  "start_time": "2026-11-15T03:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-11-13T17:04:13+00:00",
+      "provider": "Draft Kings",
+      "home_ml": -115,
+      "away_ml": -105,
+      "total": 6.5,
+      "over_odds": -115,
+      "under_odds": -105,
+      "home_pl_odds": 190,
+      "away_pl_odds": -230,
+      "home_pl_line": -1.5
+    }
+  ]
+}

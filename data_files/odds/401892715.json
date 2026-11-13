@@ -1,0 +1,20 @@
+{
+  "game_id": "401892715",
+  "home_team": "CBJ",
+  "away_team": "PHI",
+  "start_time": "2026-11-15T00:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-11-13T17:04:13+00:00",
+      "provider": "Draft Kings",
+      "home_ml": -142,
+      "away_ml": 120,
+      "total": 5.5,
+      "over_odds": -130,
+      "under_odds": 110,
+      "home_pl_odds": 170,
+      "away_pl_odds": -205,
+      "home_pl_line": -1.5
+    }
+  ]
+}

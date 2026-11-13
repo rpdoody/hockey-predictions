@@ -1,0 +1,20 @@
+{
+  "game_id": "401891809",
+  "home_team": "CAR",
+  "away_team": "SEA",
+  "start_time": "2026-11-14T18:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-11-13T17:04:13+00:00",
+      "provider": "Draft Kings",
+      "home_ml": -325,
+      "away_ml": 260,
+      "total": 6.5,
+      "over_odds": -102,
+      "under_odds": -118,
+      "home_pl_odds": -112,
+      "away_pl_odds": -108,
+      "home_pl_line": -1.5
+    }
+  ]
+}

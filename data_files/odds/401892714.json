@@ -1,0 +1,20 @@
+{
+  "game_id": "401892714",
+  "home_team": "WSH",
+  "away_team": "NJD",
+  "start_time": "2026-11-15T00:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-11-13T17:04:13+00:00",
+      "provider": "Draft Kings",
+      "home_ml": -108,
+      "away_ml": -112,
+      "total": 6.5,
+      "over_odds": 110,
+      "under_odds": -130,
+      "home_pl_odds": 200,
+      "away_pl_odds": -245,
+      "home_pl_line": -1.5
+    }
+  ]
+}
