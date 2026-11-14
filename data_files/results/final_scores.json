@@ -1543,5 +1543,15 @@
     "away_goals": 1,
     "home_goals": 0,
     "period_type": "SO"
+  },
+  "2026-11-13|VAN|NYR": {
+    "away_goals": 5,
+    "home_goals": 1,
+    "period_type": "REG"
+  },
+  "2026-11-13|VGK|NSH": {
+    "away_goals": 3,
+    "home_goals": 2,
+    "period_type": "SO"
   }
 }
