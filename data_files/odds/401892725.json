@@ -1,0 +1,20 @@
+{
+  "game_id": "401892725",
+  "home_team": "SJS",
+  "away_team": "NSH",
+  "start_time": "2026-11-16T02:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-11-14T17:03:37+00:00",
+      "provider": "DraftKings",
+      "home_ml": 142,
+      "away_ml": -170,
+      "total": 6.5,
+      "over_odds": -125,
+      "under_odds": 105,
+      "home_pl_odds": -170,
+      "away_pl_odds": 142,
+      "home_pl_line": 1.5
+    }
+  ]
+}
