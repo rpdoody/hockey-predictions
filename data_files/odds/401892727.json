@@ -1,0 +1,20 @@
+{
+  "game_id": "401892727",
+  "home_team": "UTA",
+  "away_team": "VAN",
+  "start_time": "2026-11-17T02:30Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-11-15T17:03:48+00:00",
+      "provider": "Draft Kings",
+      "home_ml": -340,
+      "away_ml": 270,
+      "total": 6.5,
+      "over_odds": -105,
+      "under_odds": -115,
+      "home_pl_odds": 114,
+      "away_pl_odds": -135,
+      "home_pl_line": -2.5
+    }
+  ]
+}
