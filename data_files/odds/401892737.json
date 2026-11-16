@@ -1,0 +1,20 @@
+{
+  "game_id": "401892737",
+  "home_team": "VGK",
+  "away_team": "DAL",
+  "start_time": "2026-11-18T03:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-11-16T23:04:05+00:00",
+      "provider": "Draft Kings",
+      "home_ml": -135,
+      "away_ml": 114,
+      "total": 5.5,
+      "over_odds": -122,
+      "under_odds": 102,
+      "home_pl_odds": 195,
+      "away_pl_odds": -238,
+      "home_pl_line": -1.5
+    }
+  ]
+}

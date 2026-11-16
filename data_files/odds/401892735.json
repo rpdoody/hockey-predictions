@@ -1,0 +1,20 @@
+{
+  "game_id": "401892735",
+  "home_team": "MIN",
+  "away_team": "NSH",
+  "start_time": "2026-11-18T01:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-11-16T23:04:05+00:00",
+      "provider": "Draft Kings",
+      "home_ml": -192,
+      "away_ml": 160,
+      "total": 6.5,
+      "over_odds": 114,
+      "under_odds": -135,
+      "home_pl_odds": 114,
+      "away_pl_odds": -135,
+      "home_pl_line": -1.5
+    }
+  ]
+}

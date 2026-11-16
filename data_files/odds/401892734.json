@@ -1,0 +1,20 @@
+{
+  "game_id": "401892734",
+  "home_team": "STL",
+  "away_team": "ANA",
+  "start_time": "2026-11-18T01:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-11-16T23:04:05+00:00",
+      "provider": "Draft Kings",
+      "home_ml": -142,
+      "away_ml": 120,
+      "total": 6.5,
+      "over_odds": -102,
+      "under_odds": -118,
+      "home_pl_odds": 170,
+      "away_pl_odds": -205,
+      "home_pl_line": -1.5
+    }
+  ]
+}

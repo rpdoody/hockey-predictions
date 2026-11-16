@@ -1,0 +1,20 @@
+{
+  "game_id": "401892729",
+  "home_team": "TBL",
+  "away_team": "WSH",
+  "start_time": "2026-11-18T00:30Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-11-16T23:04:05+00:00",
+      "provider": "Draft Kings",
+      "home_ml": -162,
+      "away_ml": 136,
+      "total": 6.5,
+      "over_odds": -115,
+      "under_odds": -105,
+      "home_pl_odds": 154,
+      "away_pl_odds": -185,
+      "home_pl_line": -1.5
+    }
+  ]
+}
