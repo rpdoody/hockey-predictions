@@ -1648,5 +1648,15 @@
     "away_goals": 6,
     "home_goals": 3,
     "period_type": "REG"
+  },
+  "2026-11-16|NYR|MTL": {
+    "away_goals": 1,
+    "home_goals": 3,
+    "period_type": "REG"
+  },
+  "2026-11-16|UTA|VAN": {
+    "away_goals": 3,
+    "home_goals": 2,
+    "period_type": "REG"
   }
 }
