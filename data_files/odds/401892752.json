@@ -1,0 +1,20 @@
+{
+  "game_id": "401892752",
+  "home_team": "SEA",
+  "away_team": "VAN",
+  "start_time": "2026-11-20T02:40Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-11-18T17:04:20+00:00",
+      "provider": "DraftKings",
+      "home_ml": -192,
+      "away_ml": 160,
+      "total": 6.5,
+      "over_odds": -108,
+      "under_odds": -112,
+      "home_pl_odds": 124,
+      "away_pl_odds": -148,
+      "home_pl_line": -1.5
+    }
+  ]
+}
