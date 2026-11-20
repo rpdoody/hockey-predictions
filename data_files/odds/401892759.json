@@ -1,0 +1,20 @@
+{
+  "game_id": "401892759",
+  "home_team": "TOR",
+  "away_team": "CBJ",
+  "start_time": "2026-11-22T00:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-11-20T17:04:00+00:00",
+      "provider": "Draft Kings",
+      "home_ml": -122,
+      "away_ml": 102,
+      "total": 6.5,
+      "over_odds": 102,
+      "under_odds": -122,
+      "home_pl_odds": 200,
+      "away_pl_odds": -245,
+      "home_pl_line": -1.5
+    }
+  ]
+}

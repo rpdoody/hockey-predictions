@@ -1,0 +1,20 @@
+{
+  "game_id": "401892763",
+  "home_team": "STL",
+  "away_team": "NJD",
+  "start_time": "2026-11-22T00:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-11-20T17:04:00+00:00",
+      "provider": "Draft Kings",
+      "home_ml": 110,
+      "away_ml": -130,
+      "total": 6.5,
+      "over_odds": 114,
+      "under_odds": -135,
+      "home_pl_odds": -225,
+      "away_pl_odds": 185,
+      "home_pl_line": 1.5
+    }
+  ]
+}

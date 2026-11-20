@@ -1,0 +1,20 @@
+{
+  "game_id": "401892767",
+  "home_team": "SJS",
+  "away_team": "SEA",
+  "start_time": "2026-11-22T03:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-11-20T17:04:00+00:00",
+      "provider": "Draft Kings",
+      "home_ml": -118,
+      "away_ml": -102,
+      "total": 6.5,
+      "over_odds": -112,
+      "under_odds": -108,
+      "home_pl_odds": 205,
+      "away_pl_odds": -250,
+      "home_pl_line": -1.5
+    }
+  ]
+}

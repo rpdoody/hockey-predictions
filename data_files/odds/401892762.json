@@ -1,0 +1,20 @@
+{
+  "game_id": "401892762",
+  "home_team": "DET",
+  "away_team": "NYI",
+  "start_time": "2026-11-22T00:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-11-20T17:04:00+00:00",
+      "provider": "Draft Kings",
+      "home_ml": -108,
+      "away_ml": -112,
+      "total": 5.5,
+      "over_odds": -122,
+      "under_odds": 102,
+      "home_pl_odds": 220,
+      "away_pl_odds": -270,
+      "home_pl_line": -1.5
+    }
+  ]
+}

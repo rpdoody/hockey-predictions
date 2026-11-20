@@ -1,0 +1,20 @@
+{
+  "game_id": "401892764",
+  "home_team": "WPG",
+  "away_team": "VGK",
+  "start_time": "2026-11-22T00:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-11-20T17:04:00+00:00",
+      "provider": "Draft Kings",
+      "home_ml": 114,
+      "away_ml": -135,
+      "total": 6.5,
+      "over_odds": -105,
+      "under_odds": -115,
+      "home_pl_odds": -230,
+      "away_pl_odds": 190,
+      "home_pl_line": 1.5
+    }
+  ]
+}

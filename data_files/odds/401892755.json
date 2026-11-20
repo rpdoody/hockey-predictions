@@ -1,0 +1,20 @@
+{
+  "game_id": "401892755",
+  "home_team": "CGY",
+  "away_team": "CHI",
+  "start_time": "2026-11-21T20:30Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-11-20T17:04:00+00:00",
+      "provider": "Draft Kings",
+      "home_ml": -162,
+      "away_ml": 136,
+      "total": 5.5,
+      "over_odds": -130,
+      "under_odds": 110,
+      "home_pl_odds": 154,
+      "away_pl_odds": -185,
+      "home_pl_line": -1.5
+    }
+  ]
+}
