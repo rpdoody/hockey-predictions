@@ -3,16 +3,22 @@ from typing import Callable, Dict, Iterable, Tuple
 
 EARLY_VALUE_MIN_EDGE_PCT = 5.0
 EARLY_BASIS = 'Early blend'
+# Under 20 games the model has trailed the market, so early-season value bets are switched off.
+EARLY_VALUE_ENABLED = False
 
 
 def early_blend_predictions(
     rows: Iterable[dict], game_date: str, normalize: Callable = lambda value: value,
+    enabled: bool = EARLY_VALUE_ENABLED,
 ) -> Dict[Tuple[str, str], dict]:
     """{(away, home): prediction} from the latest logged early-blend entry for each game on game_date.
 
     The probability is the logged one, already shrunk toward the market. Games that were
     projected from last season alone are left out, so they can never become value bets.
+    Returns an empty dict unless enabled is true.
     """
+    if not enabled:
+        return {}
     latest = {}
     for row in rows:
         if row.get('game_date') != game_date:
