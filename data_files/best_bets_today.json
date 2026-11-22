@@ -1,25 +1,10 @@
 {
   "meta": {
     "sport": "NHL",
-    "generated_at": "2026-11-21T07:01:38.366923+00:00",
+    "generated_at": "2026-11-22T07:01:44.016788+00:00",
     "model_version": "1.0.0",
-    "season": "2026"
+    "season": "2026",
+    "notes": "No NHL picks for 2026-11-22"
   },
-  "bets": [
-    {
-      "game_date": "2026-11-21",
-      "game_time": "7:00 PM ET",
-      "game": "WSH @ BOS",
-      "home_team": "BOS",
-      "away_team": "WSH",
-      "bet_type": "Moneyline",
-      "pick": "BOS",
-      "confidence": 0.5793,
-      "edge": 0.0338,
-      "tier": "Strong",
-      "odds": "-120",
-      "line": null,
-      "notes": "Legacy"
-    }
-  ]
+  "bets": []
 }
