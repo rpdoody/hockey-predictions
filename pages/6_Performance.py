@@ -15,7 +15,7 @@ from src.utils.totals_diagnostics import blend_weight, calibration_table, total_
 from src.utils.daily_goals import daily_goal_projection
 from src.utils.gap_stats import gap_summary, log_loss_gaps
 from src.utils.performance import (
-    STAKE, daily_summary, day_summary, ledger_totals, load_final_scores, load_pick_log,
+    SEGMENT_LABELS, STAKE, daily_summary, day_summary, ledger_totals, load_final_scores, load_pick_log,
     load_scorecard, money, pick_ledger, picks_for_date, segment_rows, verdict,
 )
 
@@ -139,11 +139,11 @@ unclear = sum(r['status'] == 'ungradable' for r in market_rows)
 
 st.markdown('**Upcoming (before the game)**')
 today = datetime.now(ZoneInfo('America/New_York')).date().isoformat()
-EARLY_STAGES = ('Under 20', 'Last-season')
 upcoming = sorted(
     (r for r in market_rows
      if r['status'] == 'pending' and r['date'] >= today
-     and r['edge'] >= (0.05 if r['stage'].startswith(EARLY_STAGES) else MIN_EDGE)),
+     and r['stage'] == SEGMENT_LABELS['established']
+     and r['edge'] >= MIN_EDGE),
     key=lambda r: (r['date'], -r['edge']),
 )
 if upcoming:
@@ -154,7 +154,7 @@ if upcoming:
     } for r in upcoming]), width='stretch', hide_index=True)
     st.caption(
         'Simulated and unvalidated. Odds come from the last snapshot saved when the pick was logged, so confirm '
-        'the current line and price before betting. Rows built on last-season ratings or under 20 games need a 5% edge.'
+        'the current line and price before betting. Only games where both teams have played 20 or more games are shown.'
     )
 else:
     st.info('No upcoming totals or puck-line bets meet the edge threshold yet.')

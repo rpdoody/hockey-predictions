@@ -6,10 +6,11 @@ Generates data_files/recommendations.json by:
   2. Loading current-season team stats and analytics
   3. Running the xG / win-probability model
   4. Shrinking the model toward the market's vig-free probability
-  5. Writing picks with positive edge
+  5. Writing picks with positive edge, only when both teams have played 20+ games
 
 Every game the model evaluates is also appended to data_files/pick_log/ so the
-predictions can be scored against real results later.
+predictions can be scored against real results later. Games where a team has
+played under 20 games are logged and scored but never recommended.
 
 Reads by: scripts/export_best_bets.py (which then writes best_bets_today.json)
 """
@@ -39,7 +40,7 @@ MIN_EDGE = 0.03           # only include picks with ≥3 % edge
 LOOKAHEAD_DAYS = 7
 MIN_GAMES_PLAYED = 20     # the model was only evaluated once both teams had played this many
 SHRINK_KEEP = 0.5         # share of the model's disagreement with the market that is kept
-EARLY_MIN_EDGE = 0.05     # stricter edge while a team has fewer than MIN_GAMES_PLAYED games
+EARLY_MIN_EDGE = 0.05     # no longer used for recommendations (under-20-game games are never recommended); kept for imports
 EARLY_MIN_GAMES = 1       # games a team needs this season before the blended projection is used
 PRIOR_ONLY_K = 1e12       # blend weight so small that the projection is last season only
 MODEL_VERSION = source_version((
@@ -292,7 +293,8 @@ def main() -> None:
         matchup = f"{away_abbr} @ {home_abbr}"
         if prior_only:
             model_source = f"Prior season ({prior_id})"
-        min_edge = EARLY_MIN_EDGE if early_blend is not None else MIN_EDGE
+        # Under 20 games the model loses to the market, so those games are logged but never recommended.
+        min_edge = MIN_EDGE
 
         log_records.append({
             "espn_game_id":       game.get("game_id"),
@@ -321,7 +323,7 @@ def main() -> None:
         })
 
         # ── 5. Edge calculation ──────────────────────────────────────
-        if home_implied is not None and not prior_only:
+        if home_implied is not None and not prior_only and early_blend is None:
             home_edge = home_win_prob - home_implied
             if home_edge >= min_edge:
                 recommendations.append({
@@ -339,7 +341,7 @@ def main() -> None:
                     "notes":          model_source,
                 })
 
-        if away_implied is not None and not prior_only:
+        if away_implied is not None and not prior_only and early_blend is None:
             away_edge = away_win_prob - away_implied
             if away_edge >= min_edge:
                 recommendations.append({
