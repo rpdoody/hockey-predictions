@@ -1858,5 +1858,30 @@
     "away_goals": 5,
     "home_goals": 4,
     "period_type": "SO"
+  },
+  "2026-11-22|DAL|PIT": {
+    "away_goals": 0,
+    "home_goals": 1,
+    "period_type": "REG"
+  },
+  "2026-11-22|NYR|CAR": {
+    "away_goals": 5,
+    "home_goals": 2,
+    "period_type": "REG"
+  },
+  "2026-11-22|STL|EDM": {
+    "away_goals": 4,
+    "home_goals": 5,
+    "period_type": "SO"
+  },
+  "2026-11-22|TBL|BUF": {
+    "away_goals": 6,
+    "home_goals": 2,
+    "period_type": "REG"
+  },
+  "2026-11-22|VAN|CHI": {
+    "away_goals": 6,
+    "home_goals": 3,
+    "period_type": "REG"
   }
 }
