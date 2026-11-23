@@ -32,6 +32,7 @@ from src.models.blend_projection import blend_projection
 from src.models.win_probability import calculate_win_probability
 from src.models.gap_stretch import stretched_fields
 from src.utils.pick_log import append_pick_log, source_version
+from src.utils.rest_days import rest_fields, team_game_dates
 from src.utils.season import current_season_id, to_eastern
 
 OUT_PATH = ROOT / "data_files" / "recommendations.json"
@@ -160,6 +161,7 @@ def main() -> None:
     recommendations = []
     log_records = []
     prior_cache: dict = {}
+    schedule_cache: dict = {}
 
     for game in odds_games:
         home_abbr = game.get("home_team")
@@ -320,6 +322,9 @@ def main() -> None:
             **blend_fields,
             **prior_reference,
             **stretched_fields(home_xg, away_xg),
+            # Logged only: not used by the model or the recommendations
+            **rest_fields(game_date, team_game_dates(client, home_abbr, season_id, schedule_cache), "home"),
+            **rest_fields(game_date, team_game_dates(client, away_abbr, season_id, schedule_cache), "away"),
         })
 
         # ── 5. Edge calculation ──────────────────────────────────────
