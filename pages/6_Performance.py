@@ -163,6 +163,8 @@ if not market_table:
     st.info('No graded totals or puck lines yet. This fills in once games with saved odds have final scores.')
 else:
     market_df = pd.DataFrame(market_table)
+    hidden_segments = {SEGMENT_LABELS['prior_only'], SEGMENT_LABELS['early']}
+    market_df = market_df[~market_df['Segment'].isin(hidden_segments)]
     market_df['Profit'] = market_df['Profit'].map(money)
     market_df['ROI'] = market_df['ROI'].map(lambda v: 'n/a' if v is None else format(v, '+.1%'))
     st.dataframe(
@@ -171,6 +173,10 @@ else:
             'Log loss: model': st.column_config.NumberColumn('Log loss: model', format='%.4f'),
             'Log loss: market': st.column_config.NumberColumn('Log loss: market', format='%.4f'),
         },
+    )
+    st.caption(
+        'Last-season-ratings and under-20-games segments are hidden because those games no longer get '
+        'recommendations. Their results are still logged and counted in All games and in the simulated bets list.'
     )
     placed = [r for r in market_rows if r['bet_result']]
     if placed:
