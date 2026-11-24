@@ -1,0 +1,20 @@
+{
+  "game_id": "401892793",
+  "home_team": "ANA",
+  "away_team": "SJS",
+  "start_time": "2026-11-26T03:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-11-24T17:04:16+00:00",
+      "provider": "DraftKings",
+      "home_ml": -155,
+      "away_ml": 130,
+      "total": 6.5,
+      "over_odds": -130,
+      "under_odds": 110,
+      "home_pl_odds": 145,
+      "away_pl_odds": -175,
+      "home_pl_line": -1.5
+    }
+  ]
+}

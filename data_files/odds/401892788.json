@@ -1,0 +1,20 @@
+{
+  "game_id": "401892788",
+  "home_team": "CBJ",
+  "away_team": "NJD",
+  "start_time": "2026-11-26T00:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-11-24T17:04:16+00:00",
+      "provider": "DraftKings",
+      "home_ml": 130,
+      "away_ml": -155,
+      "total": 6.5,
+      "over_odds": 110,
+      "under_odds": -130,
+      "home_pl_odds": -180,
+      "away_pl_odds": 150,
+      "home_pl_line": 1.5
+    }
+  ]
+}
