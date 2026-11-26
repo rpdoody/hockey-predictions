@@ -13,6 +13,7 @@ from src.utils.odds_storage import get_game_odds_history
 from src.utils.totals_puckline import grade_games, summarize, MIN_EDGE
 from src.utils.totals_diagnostics import blend_weight, calibration_table, total_bias, tune_goal_scale
 from src.utils.daily_goals import daily_goal_projection
+from src.utils.day_record import day_record
 from src.utils.gap_stats import gap_summary, log_loss_gaps
 from src.utils.performance import (
     SEGMENT_LABELS, STAKE, daily_summary, day_summary, ledger_totals, load_final_scores, load_pick_log,
@@ -158,6 +159,20 @@ if upcoming:
     )
 else:
     st.info('No upcoming totals or puck-line bets meet the edge threshold yet.')
+
+prior_day = yesterday.isoformat()
+prior_record = day_record(market_rows, prior_day, stage=SEGMENT_LABELS['established'])
+st.markdown('**Yesterday ({})**'.format(prior_day))
+record_cols = st.columns(2)
+for col, market in zip(record_cols, ('Total', 'Puck line')):
+    rec = prior_record[market]
+    if not rec['bets']:
+        col.metric(market, 'No bets')
+    else:
+        col.metric(
+            market, '{}-{}-{}'.format(rec['wins'], rec['losses'], rec['pushes']),
+            delta=money(rec['profit']), help='Wins-losses-pushes and profit on simulated bets (20+ games played) for {}.'.format(prior_day),
+        )
 
 if not market_table:
     st.info('No graded totals or puck lines yet. This fills in once games with saved odds have final scores.')
