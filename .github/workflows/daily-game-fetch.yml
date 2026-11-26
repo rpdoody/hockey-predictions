@@ -2,8 +2,10 @@ name: Daily Game Schedule Fetch
 
 on:
   schedule:
-    # Run daily at 7 AM UTC (3 AM ET)
+    # 7 AM UTC: 2 AM EST (3 AM EDT). Fallback run.
     - cron: '0 7 * * *'
+    # 11:30 AM UTC: 6:30 AM EST (7:30 AM EDT). Main run, uses the freshest odds before the day's games.
+    - cron: '30 11 * * *'
   workflow_dispatch:
 
 permissions:
@@ -52,6 +54,12 @@ jobs:
           git push
           echo "Committed ${GAME_COUNT} schedule updates"
 
+      - name: Capture fresh odds snapshot
+        run: python auto_capture_odds.py
+        continue-on-error: true
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+
       - name: Generate NHL recommendations
         run: python scripts/generate_recommendations.py
         env:
@@ -63,18 +71,20 @@ jobs:
         env:
           PYTHONPATH: ${{ github.workspace }}
 
-      - name: Commit best_bets_today.json and the pick log
+      - name: Commit best_bets_today.json, the pick log and odds snapshots
         if: always()
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
+          mkdir -p data_files/odds
           git add data_files/best_bets_today.json || true
           git add data_files/pick_log || true
+          git add data_files/odds/ || true
           if git diff --staged --quiet; then
             echo "Nothing to commit"
             exit 0
           fi
-          git commit -m "chore: update best_bets_today and pick log [skip ci]"
+          git commit -m "chore: update best_bets_today, pick log and odds [skip ci]"
           for attempt in 1 2 3; do
             if git pull --rebase --autostash origin main && git push; then
               exit 0
