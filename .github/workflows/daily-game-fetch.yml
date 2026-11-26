@@ -60,6 +60,12 @@ jobs:
         env:
           PYTHONPATH: ${{ github.workspace }}
 
+      - name: Save best bets and pick log size before generating
+        run: python -m src.utils.best_bets_guard before
+        continue-on-error: true
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+
       - name: Generate NHL recommendations
         run: python scripts/generate_recommendations.py
         env:
@@ -67,6 +73,13 @@ jobs:
 
       - name: Export best bets for Sports Picks Grid
         run: python scripts/export_best_bets.py
+        continue-on-error: true
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+
+      - name: Restore earlier best bets if this run evaluated no games
+        if: always()
+        run: python -m src.utils.best_bets_guard after
         continue-on-error: true
         env:
           PYTHONPATH: ${{ github.workspace }}
