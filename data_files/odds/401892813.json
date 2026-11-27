@@ -1,0 +1,20 @@
+{
+  "game_id": "401892813",
+  "home_team": "NJD",
+  "away_team": "WPG",
+  "start_time": "2026-11-29T00:00Z",
+  "snapshots": [
+    {
+      "timestamp": "2026-11-27T17:04:04+00:00",
+      "provider": "DraftKings",
+      "home_ml": -192,
+      "away_ml": 160,
+      "total": 6.5,
+      "over_odds": -108,
+      "under_odds": -112,
+      "home_pl_odds": 130,
+      "away_pl_odds": -155,
+      "home_pl_line": -1.5
+    }
+  ]
+}
